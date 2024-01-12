@@ -34,6 +34,7 @@ def preprocess_config(nn_config: Union[str, dict]) -> dict:
         if isinstance(nn_config, str):
             with open(nn_config, "r") as f:
                 nn_config = json.load(f)
+                return nn_config
     except:
         raise ValueError("cannot decode config file")
     return nn_config

@@ -11,7 +11,7 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Union
+from typing import Type, Union
 
 from nn4k.executor import LLMExecutor
 
@@ -19,6 +19,7 @@ from nn4k.executor import LLMExecutor
 class SubmitMode(Enum):
     K8s = "k8s"
     Docker = "docker"
+    Local = "local"
 
 
 class NNInvoker(ABC):
@@ -131,12 +132,22 @@ class NNInvoker(ABC):
         pass
 
 
+def auto_executor(args) -> Type[LLMExecutor]:
+    from nn4k.executor.huggingface.hf_decode_only_executor import HfDecodeOnlyExecutor
+    return HfDecodeOnlyExecutor
+
+
 class LLMInvoker(NNInvoker):
     def submit_sft(self, submit_mode: SubmitMode = SubmitMode.K8s):
         """
         Submit remote SFT execution.
         """
         raise NotImplementedError(f"{self.__class__.__name__} does not support SFT.")
+
+    def local_sft(self):
+        args = self.init_args
+        from nn4k.executor import LLMExecutor
+        LLMExecutor.from_config(args).execute_sft()
 
     def submit_rl_tuning(self, submit_mode: SubmitMode = SubmitMode.K8s):
         """
@@ -174,7 +185,7 @@ class LLMInvoker(NNInvoker):
             message += "is not found in the model hub"
             raise RuntimeError(message)
         self._nn_executor: LLMExecutor = executor
-        self._nn_executor.load_model()
+        self._nn_executor.load_model("inference")
         self._nn_executor.warmup_inference()
 
     @classmethod

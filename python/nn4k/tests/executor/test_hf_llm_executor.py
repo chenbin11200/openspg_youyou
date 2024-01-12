@@ -13,7 +13,7 @@ import sys
 import unittest
 import unittest.mock
 
-from nn4k.executor.hugging_face import HfLLMExecutor
+from nn4k.executor.huggingface.base.hf_llm_executor import HfLlmExecutor
 
 
 class TestHfLLMExecutor(unittest.TestCase):
@@ -45,7 +45,7 @@ class TestHfLLMExecutor(unittest.TestCase):
             "nn_version": "default",
         }
 
-        executor = HfLLMExecutor.from_config(nn_config)
+        executor = HfLlmExecutor.from_config(nn_config)
         executor.load_model()
         executor.inference("input")
 

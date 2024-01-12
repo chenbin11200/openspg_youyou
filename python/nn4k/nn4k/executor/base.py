@@ -10,7 +10,8 @@
 # or implied.
 
 from abc import ABC, abstractmethod
-from typing import Union
+from dataclasses import dataclass, field
+from typing import Optional, Union
 
 
 class NNExecutor(ABC):
@@ -145,7 +146,7 @@ class NNExecutor(ABC):
         raise RuntimeError(message)
 
 
-class LLMExecutor(NNExecutor):
+class LLMExecutor(NNExecutor, ABC):
     def execute_sft(self, args=None, callbacks=None, **kwargs):
         """
         The entry point of SFT execution in a certain pod.
@@ -159,3 +160,77 @@ class LLMExecutor(NNExecutor):
         raise NotImplementedError(
             f"{self.__class__.__name__} does not support RL-Tuning."
         )
+
+
+@dataclass
+class NNModelArgs:
+    nn_name: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "NN model name"
+            )
+        },
+    )
+    nn_version: Optional[str] = field(
+        default="default",
+        metadata={
+            "help": (
+                "NN model version"
+            )
+        },
+    )
+    nn_model_path: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "model path dir, could be delivered by user or get managed in Hub."
+            )
+        }
+    )
+    device: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "device"
+            )
+        }
+    )
+
+    def __post_init__(self):
+        self.pretrained_model_name_or_path = self.nn_model_path or self.nn_name
+
+
+@dataclass
+class NNAdapterModelArgs(NNModelArgs):
+    adapter_name: str = field(
+        default=None,
+        metadata={
+            "help": "adapter name. Should be provided if you want to sft or load by using a adapter model."
+        }
+    )
+    adapter_version: str = field(
+        default="latest",
+        metadata={
+            "help": "adapter is designed to get managed by versions"
+        }
+    )
+    adapter_type: str = field(
+        default="lora",
+        metadata={
+            "help": "adapter type, lora by default."
+        }
+    )
+    adapter_path: str = field(
+        default=None,
+        metadata={
+            "help": "adapter weight and config path, could be delivered by user or get managed in Hub."
+        }
+    )
+    adapter_config: Optional[dict] = field(
+        default=None,
+        metadata={"help": ""},
+    )
+
+    def __post_init__(self):
+        super().__post_init__()
