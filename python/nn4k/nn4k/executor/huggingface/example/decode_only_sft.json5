@@ -1,0 +1,36 @@
+{
+    "nn_name": "Baichuan",
+    "nn_version": "7B-chat",
+    "nn_model_path": "/model/path/to/Baichuan-7B-Chat",
+    "adapter_name": "YouYouLoraTest", //set it to a not "default" string value to enable lora sft
+    "adapter_type": "lora",
+    //start training args
+    "train_dataset_path": "/data/train/dataset.json",
+    "eval_dataset_path": "/data/eval/dataset.json",
+    "input_max_length": 256, // 输入文本的最大长度
+    //start: huggingface trainer args
+    "output_dir": "/output/baichuan_lora_sft", // 训练过程中的输出目录
+    "do_train": true,
+    "per_device_train_batch_size": 1, // 每个设备的训练批次大小
+    "gradient_accumulation_steps": 1, // 梯度累计步骤，用于模拟更大的批次大小
+    "lr_scheduler_type": "cosine", // 使用余弦退火策略进行学习率调整
+    "logging_steps": 10, // 每10步记录一次日志
+    "save_steps": 10000, // 每10000步保存一次模型
+    "learning_rate": 5e-5, // 设置学习率
+    "num_train_epochs": 1.0, // 训练1个epoch
+    //end: huggingface trainer args
+    "adapter_config": { // set if you want to train from scratch
+        "r": 8,
+        "lora_alpha":16,
+        "lora_dropout":0.05,
+        "bias":"none",
+        "target_modules":["W_pack", "o_proj"], // this is only an example for BaiChuan lora training
+        "task_type":"CAUSAL_LM"
+    },
+    "qlora_bits_and_bytes_config": {
+        "load_in_4bit": true,
+        "bnb_4bit_compute_dtype": "bfloat16",
+        "bnb_4bit_use_double_quant": true,
+        "bnb_4bit_quant_type": "nf4"
+    }
+}

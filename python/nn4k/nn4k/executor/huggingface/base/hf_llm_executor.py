@@ -12,7 +12,6 @@ import os
 from abc import abstractmethod
 from typing import Union
 
-from path import Path
 from transformers import AutoConfig, AutoTokenizer, Trainer, default_data_collator
 from torch.utils.data import Dataset
 
@@ -26,31 +25,10 @@ class HfLlmExecutor(LLMExecutor):
         self.model_mode = None
 
     @classmethod
-    def from_config(cls, nn_config: Union[str, dict]) -> "HfLlmExecutor":
+    def from_config(cls, nn_config: Union[dict]) -> "HfLlmExecutor":
         """
         Create an HfLLMExecutor instance from `nn_config`.
         """
-        if isinstance(nn_config, str):
-            if nn_config == 'sys':
-                import sys
-                args = sys.argv
-                # If only one argument is passed to the script, and the argument is a path to a json file
-                if len(args) == 2 and args[1].endswith(".json"):
-                    nn_config = os.path.abspath(sys.argv[1])
-                else:
-                    raise NotImplementedError("You can only pass a json file path as the py script argument")
-
-            if nn_config.endswith('.json'):
-                import json
-                with open(Path(nn_config), encoding="utf-8") as open_json_file:
-                    data = json.loads(open_json_file.read())
-                    nn_config = data
-        elif isinstance(nn_config, dict):
-            pass
-        else:
-            raise NotImplementedError("Only dict, command line args and json file path can be handled in "
-                                      "hf_llm_executor")
-
         executor = cls(nn_config)
         return executor
 
@@ -61,13 +39,11 @@ class HfLlmExecutor(LLMExecutor):
 
         from transformers import HfArgumentParser
         parser = HfArgumentParser(HfSftArgs)
-        hf_sft_args, _ = parser.parse_dict(args, allow_extra_keys=True)
-        sft_args: HfSftArgs = hf_sft_args
-
-        # train_dataset, eval_dataset = self._init_dataset(hf_sft_args)
+        hf_sft_args: HfSftArgs
+        hf_sft_args, *_ = parser.parse_dict(args, allow_extra_keys=True)
 
         checkpoint = None
-        last_checkpoint = self._get_last_checkpoint(hf_sft_args.output_dir)
+        last_checkpoint = self._get_last_checkpoint(hf_sft_args)
 
         # 优先使用training_args内容
         if hf_sft_args.resume_from_checkpoint is not None:
@@ -75,12 +51,12 @@ class HfLlmExecutor(LLMExecutor):
         elif last_checkpoint is not None:
             checkpoint = last_checkpoint
 
-        train_dataset, eval_dataset = self._init_dataset(sft_args)
-        trainer = self._init_trainer(train_dataset, eval_dataset, sft_args, callbacks)
+        train_dataset, eval_dataset = self._init_dataset(hf_sft_args)
+        trainer: Trainer = self._init_trainer(train_dataset, eval_dataset, hf_sft_args, callbacks)
 
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
 
-        trainer.save_model(sft_args.output_dir)
+        trainer.save_model(hf_sft_args.output_dir)
         # 普通train model
         # if not sft_args.adapter_name:
         # else:  # lora
@@ -122,7 +98,7 @@ class HfLlmExecutor(LLMExecutor):
                     "Use --overwrite_output_dir to overcome."
                 )
             elif last_checkpoint is not None and sft_args.resume_from_checkpoint is None:
-                self.logger.info(
+                print(
                     f"Checkpoint detected, resuming training at"
                     f" {last_checkpoint}. To avoid this behavior, change"
                     " the `--output_dir` or add `--overwrite_output_dir` to"
@@ -149,14 +125,14 @@ class HfLlmExecutor(LLMExecutor):
     def _init_dataset(self, args: HfSftArgs) -> tuple(Union[Dataset], Union[Dataset]):  # noqa
         with args.main_process_first(desc="initialize dataset"):
             train_dataset = None
-            if args.train_path:
-                train_dataset = self._load_dataset(args.train_path, 'train').shuffle().map(self.map_fn,
-                                                                                           fn_kwargs={"args": args})
+            if args.train_dataset_path:
+                train_dataset = self._load_dataset(args.train_dataset_path, 'train')\
+                    .shuffle().map(self.map_fn, fn_kwargs={"args": args})
 
             eval_dataset = None
-            if args.eval_path:
-                eval_dataset = self._load_dataset(args.eval_path, 'train').shuffle().map(self.map_fn,
-                                                                                         fn_kwargs={"args": args})
+            if args.eval_dataset_path:
+                eval_dataset = self._load_dataset(args.eval_dataset_path, 'train')\
+                    .shuffle().map(self.map_fn, fn_kwargs={"args": args})
 
             return train_dataset, eval_dataset
 

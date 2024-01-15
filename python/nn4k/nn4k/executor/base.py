@@ -229,7 +229,8 @@ class NNAdapterModelArgs(NNModelArgs):
     )
     adapter_config: Optional[dict] = field(
         default=None,
-        metadata={"help": ""},
+        metadata={"help": "Only necessary if you want to init a new adapter model and train from scratch."
+                          "same as peft config init args."},
     )
 
     def __post_init__(self):

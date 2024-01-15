@@ -30,7 +30,7 @@ class HfModelArgs(NNAdapterModelArgs):
         default=False,
         metadata={"help": "Whether or not to allow for custom models defined on the Hub in their own modeling files."},
     )
-    from_tf: Optional[bool] = field(
+    from_tf: bool = field(
         default=False,
         metadata={"help": " Load the model weights from a TensorFlow checkpoint save file, default to False"},
     )
@@ -51,15 +51,15 @@ class HfSftArgs(HfModelArgs, TrainingArguments):
     #                       "manage and download you lora model; otherwise you have to maintain your load model and "
     #                       "configs in nas directory on you own. "}
     # )
-    input_columns: Optional[List[str]] = field(
+    # input_columns: Optional[List[str]] = field(
+    #     default=None,
+    #     metadata={"help": ""},
+    # )
+    train_dataset_path: Optional[str] = field(
         default=None,
         metadata={"help": ""},
     )
-    train_path: Optional[str] = field(
-        default=None,
-        metadata={"help": ""},
-    )
-    eval_path: Optional[str] = field(
+    eval_dataset_path: Optional[str] = field(
         default=None
     )
     input_max_length: int = field(

@@ -12,6 +12,7 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
+
         # load base model
         model_config = self._hf_model_config_loader(args, **kwargs)
 
