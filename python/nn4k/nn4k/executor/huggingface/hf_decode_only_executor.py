@@ -9,7 +9,7 @@ from nn4k.executor.huggingface.base.hf_llm_executor import HfLlmExecutor
 class HfDecodeOnlyExecutor(HfLlmExecutor):
 
     def _hf_model_loader(self, args: HfModelArgs, mode, device=None, **kwargs):
-        if device is None:
+        if device is None or 'auto':
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -78,7 +78,7 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
 
         return model
 
-    def _train_data_collator(self, features, return_tensors="pt"):
+    def _train_data_collator(self, return_tensors="pt", **kwargs):
         return transformers.DataCollatorForSeq2Seq(self.tokenizer,
                                                    pad_to_multiple_of=8,
                                                    return_tensors=return_tensors,

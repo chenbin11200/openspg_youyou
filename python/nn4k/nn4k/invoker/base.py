@@ -87,6 +87,8 @@ class NNInvoker(ABC):
         invoker = hub.get_invoker(nn_config)
         if invoker is not None:
             return invoker
+        
+        # TODO YY: use hub
 
         nn_name = nn_config.get(NN_NAME_KEY)
         if nn_name is not None:

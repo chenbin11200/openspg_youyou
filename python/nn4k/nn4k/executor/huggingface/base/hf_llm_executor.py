@@ -9,6 +9,7 @@
 # is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 # or implied.
 import os
+import typing
 from abc import abstractmethod
 from typing import Union
 
@@ -113,16 +114,16 @@ class HfLlmExecutor(LLMExecutor):
         output_text = dataset['output']
         bos_token = self.tokenizer.bos_token or ""
         eos_token = self.tokenizer.eos_token
-        input_text_template = f'{bos_token}Human: {instruction} {input_text} \n\n Assistant: {output_text} {eos_token}'
-        input_prompt = input_text_template.format(bos_token=bos_token,
-                                                  instruction=instruction,
-                                                  input_text=input_text,
-                                                  output_text=output_text,
-                                                  eos_token=eos_token)
+        input_prompt = f'{bos_token}Human: {instruction} {input_text}\nAssistant: {output_text} {eos_token}'
+        # input_prompt = input_text_template.format(bos_token=bos_token,
+        #                                           instruction=instruction,
+        #                                           input_text=input_text,
+        #                                           output_text=output_text,
+        #                                           eos_token=eos_token)
         tokenized_full_prompt = self._tokenize_train_dataset(input_prompt, args.input_max_length)
         return tokenized_full_prompt
 
-    def _init_dataset(self, args: HfSftArgs) -> tuple(Union[Dataset], Union[Dataset]):  # noqa
+    def _init_dataset(self, args: HfSftArgs) -> typing.Tuple[Union[Dataset], Union[Dataset]]:  # noqa
         with args.main_process_first(desc="initialize dataset"):
             train_dataset = None
             if args.train_dataset_path:
@@ -196,11 +197,11 @@ class HfLlmExecutor(LLMExecutor):
         from transformers import HfArgumentParser
         from nn4k.executor.huggingface.base.hf_args import HfModelArgs
         parser = HfArgumentParser(HfModelArgs)
-        hf_model_args, _ = parser.parse_dict(args, allow_extra_keys=True)
+        hf_model_args, *_ = parser.parse_dict(args, allow_extra_keys=True)
 
         self.model_mode = mode
         self._tokenizer = self._hf_tokenizer_loader(hf_model_args)
-        self._model = self._hf_model_loader(hf_model_args, mode, hf_model_args.device)
+        self._model = self._hf_model_loader(hf_model_args, mode, hf_model_args.nn_device)
 
         if self.tokenizer.eos_token_id is None:
             self.tokenizer.eos_token_id = self.model.config.eos_token_id
@@ -294,7 +295,9 @@ class HfLlmExecutor(LLMExecutor):
         return tokenizer
 
     def _hf_model_config_loader(self, args: HfModelArgs, **kwargs):  # noqa
-        model_config = AutoConfig.from_pretrained(args.pretrained_model_name_or_path, **kwargs)
+        model_config = AutoConfig.from_pretrained(args.pretrained_model_name_or_path,
+                                                  trust_remote_code=args.trust_remote_code,
+                                                  **kwargs)
         return model_config
 
     def _init_trainer(self,
@@ -317,14 +320,16 @@ class HfLlmExecutor(LLMExecutor):
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             tokenizer=self.tokenizer,
-            data_collator=self._train_data_collator,
+            data_collator=self._train_data_collator(),
             callbacks=callbacks
         )
 
         return trainer
 
-    def _train_data_collator(self, features, return_tensors="pt"):
-        return default_data_collator
+    @abstractmethod
+    def _train_data_collator(self, return_tensors="pt", **kwargs):
+        pass
+        # return default_data_collator(features)
 
     # def _handle_dataset(self, dataset, dataset_type, data_args, train_args: HfSftArgs):
     #     # Tokenization and text grouping must be done in the main process

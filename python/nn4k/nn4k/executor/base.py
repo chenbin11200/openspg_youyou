@@ -188,8 +188,8 @@ class NNModelArgs:
             )
         }
     )
-    device: Optional[str] = field(
-        default=None,
+    nn_device: Optional[str] = field(
+        default='auto',
         metadata={
             "help": (
                 "device"
