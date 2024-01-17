@@ -44,20 +44,12 @@ class HfLlmExecutor(LLMExecutor):
         hf_sft_args: HfSftArgs
         hf_sft_args, *_ = parser.parse_dict(args, allow_extra_keys=True)
 
-        # checkpoint = False
-        # last_checkpoint = self._get_last_checkpoint(hf_sft_args)
-
-        # 优先使用training_args内容
-        # if hf_sft_args.resume_from_checkpoint is not None:
-            # if hf_sft_args.resume_from_checkpoint in ['true', 'True']
-        checkpoint = self._get_last_checkpoint(hf_sft_args) or False
-            # else:
-            #     checkpoint = hf_sft_args.resume_from_checkpoint
+        resume_from_checkpoint_path = self._get_last_checkpoint(hf_sft_args)
 
         train_dataset, eval_dataset = self._init_dataset(hf_sft_args)
         trainer: Trainer = self._init_trainer(train_dataset, eval_dataset, hf_sft_args, callbacks)
 
-        train_result = trainer.train(resume_from_checkpoint=checkpoint)
+        train_result = trainer.train(resume_from_checkpoint=resume_from_checkpoint_path)
 
         trainer.save_model(hf_sft_args.output_dir)
         # 普通train model
@@ -87,24 +79,30 @@ class HfLlmExecutor(LLMExecutor):
 
         return self
 
-    def _get_last_checkpoint(self, sft_args: HfSftArgs):
-        last_checkpoint = None
-        if os.path.isdir(sft_args.output_dir) and not sft_args.overwrite_output_dir:
-            from transformers.trainer_utils import get_last_checkpoint
-            last_checkpoint = get_last_checkpoint(sft_args.output_dir)
-            if last_checkpoint is None and len(os.listdir(sft_args.output_dir)) > 0:
-                raise ValueError(
-                    f"Output directory ({sft_args.output_dir}) already exists and is not empty. "
-                    "Use --overwrite_output_dir to overcome."
-                )
-            elif last_checkpoint is not None and sft_args.resume_from_checkpoint is None:
-                print(
-                    f"Checkpoint detected, resuming training at"
-                    f" {last_checkpoint}. To avoid this behavior, change"
-                    " the `--output_dir` or add `--overwrite_output_dir` to"
-                    " train from scratch."
-                )
-        return last_checkpoint
+    def _get_last_checkpoint(self, sft_args: HfSftArgs) -> Optional[str]:   # noqa
+        output_dir_contains_file = os.path.isdir(sft_args.output_dir) and len(os.listdir(sft_args.output_dir)) > 0
+
+        if sft_args.resume_from_checkpoint in ['True', 'true', True, '']:
+            resume_from_checkpoint_bool = True
+            if output_dir_contains_file:
+                from transformers.trainer_utils import get_last_checkpoint
+                resume_from_checkpoint_path = get_last_checkpoint(sft_args.output_dir)
+            else:
+                resume_from_checkpoint_path = None
+            assert resume_from_checkpoint_path is not None, f"cannot find last checkpoint dir in {sft_args.output_dir}"
+        elif sft_args.resume_from_checkpoint in [None, 'False', 'false', False]:
+            resume_from_checkpoint_bool = False
+            resume_from_checkpoint_path = None
+        else:
+            resume_from_checkpoint_bool = True
+            resume_from_checkpoint_path = os.path.join(sft_args.output_dir, sft_args.resume_from_checkpoint)
+            assert os.path.isdir(resume_from_checkpoint_path), f'{resume_from_checkpoint_path} is not a dir.'
+
+        if output_dir_contains_file and not sft_args.overwrite_output_dir and not resume_from_checkpoint_bool:
+            raise ValueError(f'Output_dir ({sft_args.output_dir}) is not empty. Maybe you mean --resume_from_checkpoint'
+                             '="True" to resume a training or --overwrite_output_dir to overwrite output_dir.')
+
+        return resume_from_checkpoint_path
 
     def map_fn(self, dataset, **kwargs):
         args: HfSftArgs = kwargs.get("args", None)
@@ -126,12 +124,12 @@ class HfLlmExecutor(LLMExecutor):
         with args.main_process_first(desc="initialize dataset"):
             train_dataset = None
             if args.train_dataset_path:
-                train_dataset = self._load_dataset(args.train_dataset_path, 'train')\
+                train_dataset = self._load_dataset(args.train_dataset_path, 'train') \
                     .shuffle().map(self.map_fn, fn_kwargs={"args": args})
 
             eval_dataset = None
             if args.eval_dataset_path:
-                eval_dataset = self._load_dataset(args.eval_dataset_path, 'train')\
+                eval_dataset = self._load_dataset(args.eval_dataset_path, 'train') \
                     .shuffle().map(self.map_fn, fn_kwargs={"args": args})
 
             return train_dataset, eval_dataset
@@ -477,6 +475,3 @@ class HfLlmExecutor(LLMExecutor):
         tokenized_dataset["labels"] = tokenized_dataset["input_ids"].copy()
 
         return tokenized_dataset
-
-
-

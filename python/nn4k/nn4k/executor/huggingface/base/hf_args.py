@@ -66,6 +66,10 @@ class HfSftArgs(HfModelArgs, TrainingArguments):
         default=1024,
         metadata={"help": ""},
     )
+    resume_from_checkpoint: Optional[str] = field(
+        default=None,
+        metadata={"help": "The path to a folder with a valid checkpoint for your model."},
+    )
 
     def __post_init__(self):
         HfModelArgs.__post_init__(self)
