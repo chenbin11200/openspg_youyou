@@ -43,19 +43,20 @@ class HfLlmExecutor(LLMExecutor):
         hf_sft_args: HfSftArgs
         hf_sft_args, *_ = parser.parse_dict(args, allow_extra_keys=True)
 
-        checkpoint = None
-        last_checkpoint = self._get_last_checkpoint(hf_sft_args)
+        # checkpoint = False
+        # last_checkpoint = self._get_last_checkpoint(hf_sft_args)
 
         # 优先使用training_args内容
-        if hf_sft_args.resume_from_checkpoint is not None:
-            checkpoint = hf_sft_args.resume_from_checkpoint
-        elif last_checkpoint is not None:
-            checkpoint = last_checkpoint
+        # if hf_sft_args.resume_from_checkpoint is not None:
+            # if hf_sft_args.resume_from_checkpoint in ['true', 'True']
+        checkpoint = self._get_last_checkpoint(hf_sft_args) or False
+            # else:
+            #     checkpoint = hf_sft_args.resume_from_checkpoint
 
         train_dataset, eval_dataset = self._init_dataset(hf_sft_args)
         trainer: Trainer = self._init_trainer(train_dataset, eval_dataset, hf_sft_args, callbacks)
 
-        train_result = trainer.train(resume_from_checkpoint=checkpoint)
+        train_result = trainer.train(resume_from_checkpoint=True)
 
         trainer.save_model(hf_sft_args.output_dir)
         # 普通train model
@@ -86,9 +87,6 @@ class HfLlmExecutor(LLMExecutor):
         return self
 
     def _get_last_checkpoint(self, sft_args: HfSftArgs):
-        """
-        TODO YY:
-        """
         last_checkpoint = None
         if os.path.isdir(sft_args.output_dir) and not sft_args.overwrite_output_dir:
             from transformers.trainer_utils import get_last_checkpoint
