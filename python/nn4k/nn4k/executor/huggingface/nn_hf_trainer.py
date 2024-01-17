@@ -28,23 +28,23 @@ class NNHfTrainer(Trainer):
 
     def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
         # the following code only trying to fix resuming checkpoint for adapter model(Peft)
-        if not (is_peft_available() and isinstance(model, PeftModel)):
-            return super()._load_from_checkpoint(resume_from_checkpoint, model)
-
-        if model is None:
+        if model is None:   
             model = self.model
 
-        config_file = os.path.join(resume_from_checkpoint, CONFIG_NAME)
-        adapter_weights_file = os.path.join(resume_from_checkpoint, ADAPTER_WEIGHTS_NAME)
-        adapter_safe_weights_file = os.path.join(resume_from_checkpoint, ADAPTER_SAFE_WEIGHTS_NAME)
-        weights_file = os.path.join(resume_from_checkpoint, WEIGHTS_NAME)
-        weights_index_file = os.path.join(resume_from_checkpoint, WEIGHTS_INDEX_NAME)
-        safe_weights_file = os.path.join(resume_from_checkpoint, SAFE_WEIGHTS_NAME)
-        safe_weights_index_file = os.path.join(resume_from_checkpoint, SAFE_WEIGHTS_INDEX_NAME)
+        if not (is_peft_available() and isinstance(model, PeftModel)):
+            return super()._load_from_checkpoint(resume_from_checkpoint, model)
 
         adapter_name_path = ''
         if isinstance(model, PeftModel):
             adapter_name_path = model.active_adapter if model.active_adapter not in ['default', None] else ''
+
+        config_file = os.path.join(resume_from_checkpoint, CONFIG_NAME)
+        adapter_weights_file = os.path.join(resume_from_checkpoint, adapter_name_path, ADAPTER_WEIGHTS_NAME)
+        adapter_safe_weights_file = os.path.join(resume_from_checkpoint, adapter_name_path, ADAPTER_SAFE_WEIGHTS_NAME)
+        weights_file = os.path.join(resume_from_checkpoint, WEIGHTS_NAME)
+        weights_index_file = os.path.join(resume_from_checkpoint, WEIGHTS_INDEX_NAME)
+        safe_weights_file = os.path.join(resume_from_checkpoint, SAFE_WEIGHTS_NAME)
+        safe_weights_index_file = os.path.join(resume_from_checkpoint, SAFE_WEIGHTS_INDEX_NAME)
 
         if not any(
                 os.path.isfile(f)
@@ -53,8 +53,8 @@ class NNHfTrainer(Trainer):
                     safe_weights_file,
                     weights_index_file,
                     safe_weights_index_file,
-                    os.path.join(adapter_weights_file, adapter_name_path),
-                    os.path.join(adapter_safe_weights_file, adapter_name_path)
+                    os.path.join(adapter_weights_file),
+                    os.path.join(adapter_safe_weights_file)
                 ]
         ):
             raise ValueError(f"Can't find a valid checkpoint at {resume_from_checkpoint}")

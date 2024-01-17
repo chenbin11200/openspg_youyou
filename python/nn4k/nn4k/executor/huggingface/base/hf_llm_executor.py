@@ -11,7 +11,7 @@
 import os
 import typing
 from abc import abstractmethod
-from typing import Union
+from typing import Union, Optional
 
 from transformers import AutoConfig, AutoTokenizer, Trainer, default_data_collator
 from torch.utils.data import Dataset
@@ -81,7 +81,7 @@ class HfLlmExecutor(LLMExecutor):
 
     def _get_last_checkpoint(self, sft_args: HfSftArgs) -> Optional[str]:   # noqa
         output_dir_contains_file = os.path.isdir(sft_args.output_dir) and len(os.listdir(sft_args.output_dir)) > 0
-
+        
         if sft_args.resume_from_checkpoint in ['True', 'true', True, '']:
             resume_from_checkpoint_bool = True
             if output_dir_contains_file:
