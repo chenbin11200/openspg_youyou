@@ -18,6 +18,7 @@ from torch.utils.data import Dataset
 
 from nn4k.executor import LLMExecutor
 from nn4k.executor.huggingface.base.hf_args import HfModelArgs, HfSftArgs
+from nn4k.executor.huggingface.nn_hf_trainer import NNHfTrainer
 
 
 class HfLlmExecutor(LLMExecutor):
@@ -56,7 +57,7 @@ class HfLlmExecutor(LLMExecutor):
         train_dataset, eval_dataset = self._init_dataset(hf_sft_args)
         trainer: Trainer = self._init_trainer(train_dataset, eval_dataset, hf_sft_args, callbacks)
 
-        train_result = trainer.train(resume_from_checkpoint=True)
+        train_result = trainer.train(resume_from_checkpoint=checkpoint)
 
         trainer.save_model(hf_sft_args.output_dir)
         # 普通train model
@@ -280,7 +281,11 @@ class HfLlmExecutor(LLMExecutor):
         return outputs
 
     @abstractmethod
-    def _hf_model_loader(self, args: HfModelArgs, mode, device=None, **kwargs):
+    def _hf_model_loader(self,
+                         args: HfModelArgs,
+                         mode,
+                         resume_from_checkpoint=False,
+                         device=None, **kwargs):
         pass
 
     def _hf_tokenizer_loader(self, args: HfModelArgs, **kwargs):  # noqa
@@ -312,7 +317,7 @@ class HfLlmExecutor(LLMExecutor):
 
         # train_dataset, dataset_type = self._init_dataset(data_args)
 
-        trainer = Trainer(
+        trainer = NNHfTrainer(
             model=self.model,
             args=sft_args,
             train_dataset=train_dataset,

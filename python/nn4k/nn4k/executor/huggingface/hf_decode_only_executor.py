@@ -8,10 +8,9 @@ from nn4k.executor.huggingface.base.hf_llm_executor import HfLlmExecutor
 
 class HfDecodeOnlyExecutor(HfLlmExecutor):
 
-    def _hf_model_loader(self, args: HfModelArgs, mode, device=None, **kwargs):
+    def _hf_model_loader(self, args: HfModelArgs, mode, resume_from_checkpoint=False, device=None, **kwargs):
         if device is None or 'auto':
             device = "cuda" if torch.cuda.is_available() else "cpu"
-
 
         # load base model
         model_config = self._hf_model_config_loader(args, **kwargs)
@@ -41,9 +40,10 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
 
         # load adapter model
         if args.adapter_name:
-            if args.adapter_path:
+            # provide a adapter_path, means one can load an exist lora adapter and start a new train based on that.
+            if args.adapter_path and not resume_from_checkpoint:
                 from peft import PeftModel
-                # TODO YY: Notice: NN4K plan to provide a hub-managed adapter implementation in the near future.
+                # TODO: Notice: NN4K plan to provide a hub-managed adapter implementation in the near future.
                 model = PeftModel.from_pretrained(model=model,
                                                   model_id=args.adapter_path,
                                                   adapter_name=args.adapter_name,
@@ -55,21 +55,18 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
                 from peft import LoraConfig
                 if args.adapter_type in ['lora', 'qlora']:
                     peft_config = LoraConfig(**args.adapter_config)
-                    #     task_type=peft_task_type,
-                    #     inference_mode=False,
-                    #     r=args.lora_rank,
-                    #     lora_alpha=args.lora_alpha,
-                    #     lora_dropout=args.lora_dropout
-                    # )
                 else:
                     raise NotImplementedError(f"adapter_type {args.adapter_type} is not supported in "
                                               f"hf_decode_only_executor use lora or qlora instead")
-
                 model = get_peft_model(model=model,
                                        peft_config=peft_config,
                                        adapter_name=args.adapter_name,
                                        # adapter_version=args.adapter_version,
                                        )
+            else:
+                raise ValueError("You should either provide a adapter_path to load an existing adapter without resume"
+                                 "a training, or provide a adapter_config to train a adapter from scratch or resume a "
+                                 "adapter training from checkpoint.")
             print(f"Reduce trainable params:\n{model.print_trainable_parameters()}")
 
         if mode == 'inference':
