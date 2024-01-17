@@ -147,6 +147,11 @@ class NNExecutor(ABC):
 
 
 class LLMExecutor(NNExecutor, ABC):
+    @classmethod
+    def from_config(cls, nn_config: Union[str, dict]) -> "LLMExecutor":
+        from nn4k.executor.huggingface.hf_decode_only_executor import HfDecodeOnlyExecutor
+        return HfDecodeOnlyExecutor.from_config(nn_config)
+
     def execute_sft(self, args=None, callbacks=None, **kwargs):
         """
         The entry point of SFT execution in a certain pod.

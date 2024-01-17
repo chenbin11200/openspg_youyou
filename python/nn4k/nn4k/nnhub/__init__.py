@@ -156,10 +156,12 @@ class SimpleNNHub(NNHub):
         if is_openai_invoker(nn_config):
             invoker = OpenAIInvoker.from_config(nn_config)
             return invoker
-
-        if is_local_invoker(nn_config):
+        # TODO later: this will be replaced once we publish the SimpleHub solution. Now we only have openai invoker
+        # and LLMInvoker
+        # if is_local_invoker(nn_config):
+        else:
             invoker = LLMInvoker.from_config(nn_config)
             self._add_local_executor(nn_config)
             return invoker
 
-        return None
+        # return None

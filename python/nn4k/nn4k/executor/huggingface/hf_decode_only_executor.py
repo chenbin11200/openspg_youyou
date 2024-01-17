@@ -40,7 +40,7 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
 
         # load adapter model
         if args.adapter_name:
-            # provide a adapter_path, means one can load an exist lora adapter and start a new train based on that.
+            # provide an adapter_path, means one can load an exist lora adapter and start a new train based on that.
             if args.adapter_path and not resume_from_checkpoint:
                 from peft import PeftModel
                 # TODO: Notice: NN4K plan to provide a hub-managed adapter implementation in the near future.
@@ -67,7 +67,7 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
                 raise ValueError("You should either provide a adapter_path to load an existing adapter without resume"
                                  "a training, or provide a adapter_config to train a adapter from scratch or resume a "
                                  "adapter training from checkpoint.")
-            print(f"Reduce trainable params:\n{model.print_trainable_parameters()}")
+            model.print_trainable_parameters()
 
         if mode == 'inference':
             model.eval()
