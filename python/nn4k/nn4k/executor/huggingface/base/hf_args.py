@@ -38,7 +38,7 @@ class HfModelArgs(NNAdapterModelArgs):
                           "same as :class:`transformers.utils.quantization_config.BitsAndBytesConfig`"}
     )
     trust_remote_code: bool = field(
-        default=False,
+        default=True,
         metadata={"help": "Whether or not to allow for custom models defined on the Hub in their own modeling files."},
     )
     from_tf: bool = field(
