@@ -1,3 +1,14 @@
+# Copyright 2023 Ant Group CO., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied.
+
 import torch
 import transformers
 from transformers import AutoModelForCausalLM
@@ -7,6 +18,10 @@ from nn4k.executor.huggingface.base.hf_llm_executor import HfLlmExecutor
 
 
 class HfDecodeOnlyExecutor(HfLlmExecutor):
+    """
+    Huggingface decode only default executor, will use AutoModelForCausalLM to load model and
+    DataCollatorForSeq2Seq as a default data collator.
+    """
 
     def _hf_model_loader(self, args: HfModelArgs, mode, resume_from_checkpoint=False, device=None, **kwargs):
         if device is None or 'auto':
@@ -24,9 +39,7 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
             pretrained_model_name_or_path=args.pretrained_model_name_or_path,
             config=model_config,
             quantization_config=quant_config,
-            # cache_dir=model_args.cache_dir,
             revision=args.nn_version,
-            # use_auth_token=True if model_args.use_auth_token else None,
             torch_dtype=args.torch_dtype,
             from_tf=args.from_tf,
             trust_remote_code=args.trust_remote_code
@@ -43,7 +56,7 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
             # provide an adapter_path, means one can load an exist lora adapter and start a new train based on that.
             if args.adapter_path and not resume_from_checkpoint:
                 from peft import PeftModel
-                # TODO: Notice: NN4K plan to provide a hub-managed adapter implementation in the near future.
+                # TODO NN4K: Notice: NN4K plan to provide a hub-managed adapter implementation in the near future.
                 model = PeftModel.from_pretrained(model=model,
                                                   model_id=args.adapter_path,
                                                   adapter_name=args.adapter_name,
@@ -61,7 +74,8 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
                 model = get_peft_model(model=model,
                                        peft_config=peft_config,
                                        adapter_name=args.adapter_name,
-                                       # adapter_version=args.adapter_version,
+                                       # TODO NN4K: NN4K plan to provide a hub-managed adapter implementation in the
+                                       #  near future. adapter_version=args.adapter_version,
                                        )
             else:
                 raise ValueError("You should either provide a adapter_path to load an existing adapter without resume"
@@ -75,7 +89,7 @@ class HfDecodeOnlyExecutor(HfLlmExecutor):
 
         return model
 
-    def _train_data_collator(self, return_tensors="pt", **kwargs):
+    def _data_collator(self, return_tensors="pt", **kwargs):
         return transformers.DataCollatorForSeq2Seq(self.tokenizer,
                                                    pad_to_multiple_of=8,
                                                    return_tensors=return_tensors,

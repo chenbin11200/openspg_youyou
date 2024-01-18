@@ -2,23 +2,23 @@
     "nn_name": "Baichuan",
     "nn_version": "7B-chat",
     "nn_model_path": "/mnt/new_nas/alps/modelhub/layer/baichuan-inc.Baichuan2-7B-Chat/main/20231105235520/hf_model",
-    "adapter_name": "YouYouLoraTest", //set it to a not "default" string value to enable lora sft
+    "adapter_name": "YouYouLoraTest_cp", //set it to a not "default" string value to enable lora sft
     "adapter_type": "lora",
-    "nn_invoker": "nn4k.invoker.base.LLMInvoker",
-    "nn_executor": "nn4k.executor.huggingface.hf_decode_only_executor.HfDecodeOnlyExecutor",
+//    "nn_invoker": "nn4k.invoker.base.LLMInvoker",
+//    "nn_executor": "nn4k.executor.huggingface.hf_decode_only_executor.HfDecodeOnlyExecutor",
     //start training args
     "trust_remote_code": true,
-    "train_dataset_path": "/data/train/dataset.json",
+    "train_dataset_path": "/ossfs/workspace/youyou/dataset/Belle_open_source/small/Belle_open_source_small.json",
     //"eval_dataset_path": "/ossfs/workspace/youyou/dataset/alpaca/test/test_252.json",
     "input_max_length": 256, // 输入文本的最大长度
     //start: huggingface trainer args
-    "output_dir": "/mnt/new_nas/users/youyou/output_temp/sft_1", // 训练过程中的输出目录
+    "output_dir": "/mnt/new_nas/users/youyou/output_temp/sft_1_ck", // 训练过程中的输出目录
     "do_train": true,
     "per_device_train_batch_size": 1, // 每个设备的训练批次大小
     "gradient_accumulation_steps": 1, // 梯度累计步骤，用于模拟更大的批次大小
     "lr_scheduler_type": "cosine", // 使用余弦退火策略进行学习率调整
     "logging_steps": 10, // 每10步记录一次日志
-    "save_steps": 10000, // 每10000步保存一次模型
+    "save_steps": 100, // 每10000步保存一次模型
     "learning_rate": 5e-5, // 设置学习率
     "num_train_epochs": 1.0, // 训练1个epoch
     //end: huggingface trainer args
@@ -28,7 +28,7 @@
         "lora_dropout":0.05,
         "bias":"none",
         "target_modules":["W_pack", "o_proj"], // this is only an example for BaiChuan lora training
-        "task_type":"CAUSAL_LM" // see peft/mapping/MODEL_TYPE_TO_PEFT_MODEL_MAPPING
+        "task_type":"CAUSAL_LM"
     },
     "qlora_bits_and_bytes_config": {
         "load_in_4bit": true,

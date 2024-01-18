@@ -10,9 +10,7 @@
 # or implied.
 
 from pathlib import Path
-
-from typing import Any
-from typing import Union
+from typing import Any, Union
 
 
 def preprocess_config(nn_config: Union[str, dict]) -> dict:

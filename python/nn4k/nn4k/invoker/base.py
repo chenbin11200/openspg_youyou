@@ -132,11 +132,6 @@ class NNInvoker(ABC):
         pass
 
 
-def auto_executor(args) -> Type[LLMExecutor]:
-    from nn4k.executor.huggingface.hf_decode_only_executor import HfDecodeOnlyExecutor
-    return HfDecodeOnlyExecutor
-
-
 class LLMInvoker(NNInvoker):
     def submit_sft(self, submit_mode: SubmitMode = SubmitMode.K8s):
         """

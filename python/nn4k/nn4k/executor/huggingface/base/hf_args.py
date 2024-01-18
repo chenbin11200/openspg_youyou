@@ -1,5 +1,16 @@
+# Copyright 2023 Ant Group CO., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied.
+
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 from transformers import TrainingArguments
 
@@ -9,8 +20,8 @@ from nn4k.executor.base import NNAdapterModelArgs
 @dataclass
 class HfModelArgs(NNAdapterModelArgs):
     """
-    Huggingface Model is designed to support adapter models such as lora, therefore inherit from NNAdapterModelArgs
-    dataclass
+    Huggingface Model is designed to support adapter models such as lora, therefore should inherit from
+    NNAdapterModelArgs dataclass
     """
     torch_dtype: Optional[str] = field(
         default='auto',
@@ -24,7 +35,7 @@ class HfModelArgs(NNAdapterModelArgs):
     qlora_bits_and_bytes_config: Optional[dict] = field(
         default=None,
         metadata={"help": "Quantization configs to load qlora, "
-                          "same as `transformers.utils.quantization_config.BitsAndBytesConfig`"}
+                          "same as :class:`transformers.utils.quantization_config.BitsAndBytesConfig`"}
     )
     trust_remote_code: bool = field(
         default=False,
@@ -37,34 +48,29 @@ class HfModelArgs(NNAdapterModelArgs):
 
     def __post_init__(self):
         super().__post_init__()
+        # for hf models, if model path has higher priority then name, since you don't need to download the model(or
+        # from cache) again.
+        self.pretrained_model_name_or_path = self.nn_model_path or self.nn_name
 
 
 @dataclass
 class HfSftArgs(HfModelArgs, TrainingArguments):
-    # lora_save_merged_model: bool = field(
-    #     default=False,
-    #     metadata={"help": "Whether to save aggregated lora."},
-    # )
-    # lora_save_to_modelhub: bool = field(
-    #     default=False,
-    #     metadata={"help": "Whether save lora model to model hub. If you save lora model to modelhub, you can easily "
-    #                       "manage and download you lora model; otherwise you have to maintain your load model and "
-    #                       "configs in nas directory on you own. "}
-    # )
-    # input_columns: Optional[List[str]] = field(
-    #     default=None,
-    #     metadata={"help": ""},
-    # )
+    """
+    args to use for huggingface model sft task
+    """
     train_dataset_path: Optional[str] = field(
         default=None,
-        metadata={"help": ""},
+        metadata={"help": "Should not be None. A file or dir path to train dataset, If a dir path, "
+                          "all files inside should have the same file extension."},
     )
     eval_dataset_path: Optional[str] = field(
-        default=None
+        default=None,
+        metadata={"help": "A file or dir path to eval dataset. If a dir path, all files inside should have the same "
+                          "file extension. If set, do_eval flag will be set to True"},
     )
     input_max_length: int = field(
         default=1024,
-        metadata={"help": ""},
+        metadata={"help": "max length of input"},
     )
     resume_from_checkpoint: Optional[str] = field(
         default=None,
@@ -74,3 +80,10 @@ class HfSftArgs(HfModelArgs, TrainingArguments):
     def __post_init__(self):
         HfModelArgs.__post_init__(self)
         TrainingArguments.__post_init__(self)
+        assert self.train_dataset_path is not None, 'train_dataset_path must be set.'
+        if self.train_dataset_path and not self.do_train:
+            self.do_train = True
+            print(f"a train_dataset_path is set but do_train flag is not set, automatically set do_train to True")
+        if self.eval_dataset_path and not self.do_eval:
+            self.do_eval = True
+            print(f"a eval_dataset_path is set but do_eval flag is not set, automatically set do_eval to True")

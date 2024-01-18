@@ -147,8 +147,15 @@ class NNExecutor(ABC):
 
 
 class LLMExecutor(NNExecutor, ABC):
+    """
+    Base Executor for LLM.
+    """
     @classmethod
     def from_config(cls, nn_config: Union[str, dict]) -> "LLMExecutor":
+        """
+        Implement distribution logic for LLM, since we only support Huggingface Decode Only models for now,
+        it is directly point to HfDecodeOnlyExecutor. Will use the hub management functions later on.
+        """
         from nn4k.executor.huggingface.hf_decode_only_executor import HfDecodeOnlyExecutor
         return HfDecodeOnlyExecutor.from_config(nn_config)
 
@@ -169,11 +176,14 @@ class LLMExecutor(NNExecutor, ABC):
 
 @dataclass
 class NNModelArgs:
+    """
+    Base NN4K-supported model definition and load related args.
+    """
     nn_name: Optional[str] = field(
         default=None,
         metadata={
             "help": (
-                "NN model name"
+                "NN4K model name"
             )
         },
     )
@@ -181,7 +191,7 @@ class NNModelArgs:
         default="default",
         metadata={
             "help": (
-                "NN model version"
+                "NN4K model version, by default is 'default'"
             )
         },
     )
@@ -197,27 +207,30 @@ class NNModelArgs:
         default='auto',
         metadata={
             "help": (
-                "device"
+                "device to use to load model"
             )
         }
     )
 
     def __post_init__(self):
-        self.pretrained_model_name_or_path = self.nn_model_path or self.nn_name
+        assert self.nn_name is not None, "nn_name must be set"
 
 
 @dataclass
 class NNAdapterModelArgs(NNModelArgs):
+    """
+    One should use this args dataclass to enable adapter models.
+    """
     adapter_name: str = field(
         default=None,
         metadata={
-            "help": "adapter name. Should be provided if you want to sft or load by using a adapter model."
+            "help": "adapter name. Should be provided if you want to sft or load a adapter model."
         }
     )
     adapter_version: str = field(
-        default="latest",
+        default="auto",
         metadata={
-            "help": "adapter is designed to get managed by versions"
+            "help": "adapter is designed to get managed by versions, by default is 'latest'"
         }
     )
     adapter_type: str = field(
@@ -234,8 +247,9 @@ class NNAdapterModelArgs(NNModelArgs):
     )
     adapter_config: Optional[dict] = field(
         default=None,
-        metadata={"help": "Only necessary if you want to init a new adapter model and train from scratch."
-                          "same as peft config init args."},
+        metadata={"help": "Only necessary if you want to init a new adapter model and train from scratch or resume"
+                          "from a checkpoint (in this case, should be the same as the previous adapter_config)."
+                          "Values are the same as peft config init args."},
     )
 
     def __post_init__(self):
