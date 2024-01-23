@@ -154,10 +154,10 @@ class LLMExecutor(NNExecutor, ABC):
     def from_config(cls, nn_config: Union[str, dict]) -> "LLMExecutor":
         """
         Implement distribution logic for LLM, since we only support Huggingface Decode Only models for now,
-        it is directly point to HfDecodeOnlyExecutor. Will use the hub management functions later on.
+        it is directly point to HFDecodeOnlyExecutor. Will use the hub management functions later on.
         """
-        from nn4k.executor.huggingface.hf_decode_only_executor import HfDecodeOnlyExecutor
-        return HfDecodeOnlyExecutor.from_config(nn_config)
+        from nn4k.executor.huggingface.hf_decode_only_executor import HFDecodeOnlyExecutor
+        return HFDecodeOnlyExecutor.from_config(nn_config)
 
     def execute_sft(self, args=None, callbacks=None, **kwargs):
         """

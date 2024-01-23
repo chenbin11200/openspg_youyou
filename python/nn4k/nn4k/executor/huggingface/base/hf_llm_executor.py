@@ -18,11 +18,11 @@ from torch.utils.data import Dataset
 from transformers import AutoConfig, AutoTokenizer, Trainer
 
 from nn4k.executor import LLMExecutor
-from nn4k.executor.huggingface.base.hf_args import HfModelArgs, HfSftArgs
-from nn4k.executor.huggingface.nn_hf_trainer import NNHfTrainer
+from nn4k.executor.huggingface.base.hf_args import HFModelArgs, HFSftArgs
+from nn4k.executor.huggingface.nn_hf_trainer import NNHFTrainer
 
 
-class HfLlmExecutor(LLMExecutor):
+class HFLLMExecutor(LLMExecutor):
     """
     Base Executor for huggingface models.
     """
@@ -32,9 +32,9 @@ class HfLlmExecutor(LLMExecutor):
         self.model_mode = None
 
     @classmethod
-    def from_config(cls, nn_config: Union[dict]) -> "HfLlmExecutor":
+    def from_config(cls, nn_config: Union[dict]) -> "HFLLMExecutor":
         """
-        Create an HfLLMExecutor instance from `nn_config`.
+        Create an HFLLMExecutor instance from `nn_config`.
         """
         executor = cls(nn_config)
         return executor
@@ -44,10 +44,10 @@ class HfLlmExecutor(LLMExecutor):
 
         self.load_model(args=args, mode='train')
 
-        # parse args into HfSftArgs dataclass for more convenient features
+        # parse args into HFSftArgs dataclass for more convenient features
         from transformers import HfArgumentParser
-        parser = HfArgumentParser(HfSftArgs)
-        hf_sft_args: HfSftArgs
+        parser = HfArgumentParser(HFSftArgs)
+        hf_sft_args: HFSftArgs
         hf_sft_args, *_ = parser.parse_dict(args, allow_extra_keys=True)
 
         # load checkpoint path if necessary.
@@ -74,7 +74,7 @@ class HfLlmExecutor(LLMExecutor):
 
         return self
 
-    def _get_last_checkpoint(self, sft_args: HfSftArgs) -> Optional[str]:  # noqa
+    def _get_last_checkpoint(self, sft_args: HFSftArgs) -> Optional[str]:  # noqa
         """
         try to find checkpoint in sft_args.output_dir.
         If sft_args.resume_from_checkpoint in ['True', 'true', True, ''], try to return the checkpoint dir with the
@@ -114,7 +114,7 @@ class HfLlmExecutor(LLMExecutor):
         'instruction', 'input' and 'output' are necessary. Since some other popular dataset like tatsu-lab/alpaca
         provides these columns as well, it is also supported.
         """
-        args: HfSftArgs = kwargs.get("args", None)
+        args: HFSftArgs = kwargs.get("args", None)
         instruction = dataset['instruction']
         input_text = dataset['input']
         output_text = dataset['output']
@@ -124,7 +124,7 @@ class HfLlmExecutor(LLMExecutor):
         tokenized_full_prompt = self._tokenize_dataset(input_prompt, args.input_max_length)
         return tokenized_full_prompt
 
-    def _init_dataset(self, args: HfSftArgs) -> typing.Tuple[Union[Dataset], Union[Dataset]]:  # noqa
+    def _init_dataset(self, args: HFSftArgs) -> typing.Tuple[Union[Dataset], Union[Dataset]]:  # noqa
         """
         init and map dataset, for train and eval
         """
@@ -150,14 +150,14 @@ class HfLlmExecutor(LLMExecutor):
         load model and tokenizer. If the model with the same mode is already loaded, will not load again.
         """
 
-        assert mode is not None, f"mode should be either 'train' or 'inference' for HfLLMExecutor, {mode} is illegal."
+        assert mode is not None, f"mode should be either 'train' or 'inference' for HFLLMExecutor, {mode} is illegal."
 
         if self.model_mode == mode and self._model is not None:
             return
 
         from transformers import HfArgumentParser
-        from nn4k.executor.huggingface.base.hf_args import HfModelArgs
-        parser = HfArgumentParser(HfModelArgs)
+        from nn4k.executor.huggingface.base.hf_args import HFModelArgs
+        parser = HfArgumentParser(HFModelArgs)
         hf_model_args, *_ = parser.parse_dict(args, allow_extra_keys=True)
 
         self.model_mode = mode
@@ -206,7 +206,7 @@ class HfLlmExecutor(LLMExecutor):
 
     @abstractmethod
     def _hf_model_loader(self,
-                         args: HfModelArgs,
+                         args: HFModelArgs,
                          mode,
                          resume_from_checkpoint=False,
                          device=None,
@@ -216,7 +216,7 @@ class HfLlmExecutor(LLMExecutor):
         """
         pass
 
-    def _hf_tokenizer_loader(self, args: HfModelArgs, **kwargs):  # noqa
+    def _hf_tokenizer_loader(self, args: HFModelArgs, **kwargs):  # noqa
         """
         hugging face tokenizer loader
         """
@@ -228,7 +228,7 @@ class HfLlmExecutor(LLMExecutor):
         )
         return tokenizer
 
-    def _hf_model_config_loader(self, args: HfModelArgs, **kwargs):  # noqa
+    def _hf_model_config_loader(self, args: HFModelArgs, **kwargs):  # noqa
         """
         hugging face model config loader
         """
@@ -240,12 +240,12 @@ class HfLlmExecutor(LLMExecutor):
     def _init_trainer(self,
                       train_dataset,
                       eval_dataset,
-                      sft_args: HfSftArgs,
+                      sft_args: HFSftArgs,
                       callbacks=None) -> Trainer:
         """
         hugging face model trainer initializer
         """
-        trainer = NNHfTrainer(
+        trainer = NNHFTrainer(
             model=self.model,
             args=sft_args,
             train_dataset=train_dataset,

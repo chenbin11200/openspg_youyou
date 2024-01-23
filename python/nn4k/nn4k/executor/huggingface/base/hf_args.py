@@ -18,7 +18,7 @@ from nn4k.executor.base import NNAdapterModelArgs
 
 
 @dataclass
-class HfModelArgs(NNAdapterModelArgs):
+class HFModelArgs(NNAdapterModelArgs):
     """
     Huggingface Model is designed to support adapter models such as lora, therefore should inherit from
     NNAdapterModelArgs dataclass
@@ -54,7 +54,7 @@ class HfModelArgs(NNAdapterModelArgs):
 
 
 @dataclass
-class HfSftArgs(HfModelArgs, TrainingArguments):
+class HFSftArgs(HFModelArgs, TrainingArguments):
     """
     args to use for huggingface model sft task
     """
@@ -78,7 +78,7 @@ class HfSftArgs(HfModelArgs, TrainingArguments):
     )
 
     def __post_init__(self):
-        HfModelArgs.__post_init__(self)
+        HFModelArgs.__post_init__(self)
         TrainingArguments.__post_init__(self)
         assert self.train_dataset_path is not None, 'train_dataset_path must be set.'
         if self.train_dataset_path and not self.do_train:

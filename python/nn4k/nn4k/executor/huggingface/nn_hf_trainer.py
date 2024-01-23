@@ -20,7 +20,7 @@ from transformers.utils import (
 )
 
 
-class NNHfTrainer(Trainer):
+class NNHFTrainer(Trainer):
     """
     only trying to fix resume checkpoint for lora adapter, will be replaced by using Trainer when the bug is
     fixed in huggingface trainer. The PR is offered: https://github.com/huggingface/transformers/pull/28547

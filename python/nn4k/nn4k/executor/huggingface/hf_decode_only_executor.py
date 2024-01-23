@@ -13,17 +13,17 @@ import torch
 import transformers
 from transformers import AutoModelForCausalLM
 
-from nn4k.executor.huggingface.base.hf_args import HfModelArgs
-from nn4k.executor.huggingface.base.hf_llm_executor import HfLlmExecutor
+from nn4k.executor.huggingface.base.hf_args import HFModelArgs
+from nn4k.executor.huggingface.base.hf_llm_executor import HFLLMExecutor
 
 
-class HfDecodeOnlyExecutor(HfLlmExecutor):
+class HFDecodeOnlyExecutor(HFLLMExecutor):
     """
     Huggingface decode only default executor, will use AutoModelForCausalLM to load model and
     DataCollatorForSeq2Seq as a default data collator.
     """
 
-    def _hf_model_loader(self, args: HfModelArgs, mode, resume_from_checkpoint=False, device=None, **kwargs):
+    def _hf_model_loader(self, args: HFModelArgs, mode, resume_from_checkpoint=False, device=None, **kwargs):
         if device is None or 'auto':
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
