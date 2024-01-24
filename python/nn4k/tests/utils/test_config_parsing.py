@@ -28,9 +28,7 @@ class TestArgs:
         default=1024,
         metadata={"help": ""},
     )
-    lora_config: Optional[dict] = field(
-        default=None
-    )
+    lora_config: Optional[dict] = field(default=None)
 
 
 class TestConfigParsing(unittest.TestCase):
@@ -121,16 +119,14 @@ class TestConfigParsing(unittest.TestCase):
 
     def testTransformerArgsParseDict(self):
         from transformers import HfArgumentParser
+
         args = {
             "input_columns": ["column1", "column2"],
             "is_bool": False,
             "input_max_length": 256,
-            "lora_config": {
-                "r": 1,
-                "type": 'lora'
-            },
+            "lora_config": {"r": 1, "type": "lora"},
             "is_bool_int": 1,
-            "extra_arg": "extra_configs"
+            "extra_arg": "extra_configs",
         }
 
         parser = HfArgumentParser(TestArgs)

@@ -28,36 +28,48 @@ class NNHFTrainer(Trainer):
 
     def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
         # the following code only trying to fix resuming checkpoint for adapter model(Peft)
-        if model is None:   
+        if model is None:
             model = self.model
 
         if not (is_peft_available() and isinstance(model, PeftModel)):
             return super()._load_from_checkpoint(resume_from_checkpoint, model)
 
-        adapter_name_path = ''
+        adapter_name_path = ""
         if isinstance(model, PeftModel):
-            adapter_name_path = model.active_adapter if model.active_adapter not in ['default', None] else ''
+            adapter_name_path = (
+                model.active_adapter
+                if model.active_adapter not in ["default", None]
+                else ""
+            )
 
         config_file = os.path.join(resume_from_checkpoint, CONFIG_NAME)
-        adapter_weights_file = os.path.join(resume_from_checkpoint, adapter_name_path, ADAPTER_WEIGHTS_NAME)
-        adapter_safe_weights_file = os.path.join(resume_from_checkpoint, adapter_name_path, ADAPTER_SAFE_WEIGHTS_NAME)
+        adapter_weights_file = os.path.join(
+            resume_from_checkpoint, adapter_name_path, ADAPTER_WEIGHTS_NAME
+        )
+        adapter_safe_weights_file = os.path.join(
+            resume_from_checkpoint, adapter_name_path, ADAPTER_SAFE_WEIGHTS_NAME
+        )
         weights_file = os.path.join(resume_from_checkpoint, WEIGHTS_NAME)
         weights_index_file = os.path.join(resume_from_checkpoint, WEIGHTS_INDEX_NAME)
         safe_weights_file = os.path.join(resume_from_checkpoint, SAFE_WEIGHTS_NAME)
-        safe_weights_index_file = os.path.join(resume_from_checkpoint, SAFE_WEIGHTS_INDEX_NAME)
+        safe_weights_index_file = os.path.join(
+            resume_from_checkpoint, SAFE_WEIGHTS_INDEX_NAME
+        )
 
         if not any(
-                os.path.isfile(f)
-                for f in [
-                    weights_file,
-                    safe_weights_file,
-                    weights_index_file,
-                    safe_weights_index_file,
-                    os.path.join(adapter_weights_file),
-                    os.path.join(adapter_safe_weights_file)
-                ]
+            os.path.isfile(f)
+            for f in [
+                weights_file,
+                safe_weights_file,
+                weights_index_file,
+                safe_weights_index_file,
+                os.path.join(adapter_weights_file),
+                os.path.join(adapter_safe_weights_file),
+            ]
         ):
-            raise ValueError(f"Can't find a valid checkpoint at {resume_from_checkpoint}")
+            raise ValueError(
+                f"Can't find a valid checkpoint at {resume_from_checkpoint}"
+            )
 
         logger.info(f"Loading model from {resume_from_checkpoint}.")
 
@@ -74,12 +86,18 @@ class NNHFTrainer(Trainer):
         if os.path.isfile(weights_file) or os.path.isfile(safe_weights_file):
             # If the model is on the GPU, it still works!
             if is_sagemaker_mp_enabled():
-                if os.path.isfile(os.path.join(resume_from_checkpoint, "user_content.pt")):
+                if os.path.isfile(
+                    os.path.join(resume_from_checkpoint, "user_content.pt")
+                ):
                     # If the 'user_content.pt' file exists, load with the new smp api.
                     # Checkpoint must have been saved with the new smp api.
                     import smdistributed.modelparallel.torch as smp
+
                     smp.resume_from_checkpoint(
-                        path=resume_from_checkpoint, tag=WEIGHTS_NAME, partial=False, load_optimizer=False
+                        path=resume_from_checkpoint,
+                        tag=WEIGHTS_NAME,
+                        partial=False,
+                        load_optimizer=False,
                     )
                 else:
                     # If the 'user_content.pt' file does NOT exist, load with the old smp api.
@@ -95,11 +113,18 @@ class NNHFTrainer(Trainer):
                     # release memory
                     del state_dict
             elif self.is_fsdp_enabled:
-                load_fsdp_model(self.accelerator.state.fsdp_plugin, self.accelerator, model, resume_from_checkpoint)
+                load_fsdp_model(
+                    self.accelerator.state.fsdp_plugin,
+                    self.accelerator,
+                    model,
+                    resume_from_checkpoint,
+                )
             else:
                 # We load the model state dict on the CPU to avoid an OOM error.
                 if self.args.save_safetensors and os.path.isfile(safe_weights_file):
-                    state_dict = safetensors.torch.load_file(safe_weights_file, device="cpu")
+                    state_dict = safetensors.torch.load_file(
+                        safe_weights_file, device="cpu"
+                    )
                 else:
                     state_dict = torch.load(weights_file, map_location="cpu")
 
@@ -114,9 +139,13 @@ class NNHFTrainer(Trainer):
         elif is_peft_available() and isinstance(model, PeftModel):
             # If train a model using PEFT & LoRA, assume that adapter have been saved properly.
             if hasattr(model, "active_adapter") and hasattr(model, "load_adapter"):
-                adapter_model_path = os.path.join(resume_from_checkpoint, adapter_name_path)
+                adapter_model_path = os.path.join(
+                    resume_from_checkpoint, adapter_name_path
+                )
                 if os.path.exists(adapter_model_path):
-                    model.load_adapter(adapter_model_path, model.active_adapter, is_trainable=True)
+                    model.load_adapter(
+                        adapter_model_path, model.active_adapter, is_trainable=True
+                    )
                 else:
                     logger.warning(
                         "The intermediate checkpoints of PEFT may not be saved correctly, "
@@ -124,12 +153,16 @@ class NNHFTrainer(Trainer):
                         "Check some examples here: https://github.com/huggingface/peft/issues/96"
                     )
             else:
-                logger.warning("Could not load adapter model, make sure to have `peft>=0.3.0` installed")
+                logger.warning(
+                    "Could not load adapter model, make sure to have `peft>=0.3.0` installed"
+                )
         else:
             # We load the sharded checkpoint
             load_result = load_sharded_checkpoint(
-                model, resume_from_checkpoint, strict=is_sagemaker_mp_enabled(),
-                prefer_safe=self.args.save_safetensors
+                model,
+                resume_from_checkpoint,
+                strict=is_sagemaker_mp_enabled(),
+                prefer_safe=self.args.save_safetensors,
             )
             if not is_sagemaker_mp_enabled():
                 self._issue_warnings_after_load(load_result)

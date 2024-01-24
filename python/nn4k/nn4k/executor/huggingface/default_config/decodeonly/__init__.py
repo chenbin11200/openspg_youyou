@@ -8,12 +8,3 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License
 # is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 # or implied.
-
-
-class FileUtils:
-    @staticmethod
-    def get_extension(file_path: str):
-        """
-        get file extension from an input path
-        """
-        return file_path.split(".")[-1]

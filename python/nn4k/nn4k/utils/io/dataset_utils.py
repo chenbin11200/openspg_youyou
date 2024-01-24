@@ -14,17 +14,12 @@ from typing import List
 
 from nn4k.utils.io.file_utils import FileUtils
 
-EXTENSION_TYPE = {
-    "csv": "csv",
-    "json": "json",
-    "jsonl": "json",
-    "txt": "text"
-}
+EXTENSION_TYPE = {"csv": "csv", "json": "json", "jsonl": "json", "txt": "text"}
 
 
 class DatasetUtils:
     @staticmethod
-    def auto_dataset(input_path, split='train', transform_fn=None, dataset_map_fn=None):
+    def auto_dataset(input_path, split="train", transform_fn=None, dataset_map_fn=None):
         """
         Args:
             input_path: dataset pash, support local file path or dir, if dir is used, make sure all files within the dir
@@ -40,17 +35,23 @@ class DatasetUtils:
             for file_name in os.listdir(input_path):
                 data_files.append(os.path.join(input_path, file_name))
                 if file_extension is None:
-                    file_extension = EXTENSION_TYPE.get(FileUtils.get_extension(file_name), None)
+                    file_extension = EXTENSION_TYPE.get(
+                        FileUtils.get_extension(file_name), None
+                    )
                 else:
-                    assert file_extension == EXTENSION_TYPE.get(FileUtils.get_extension(file_name),
-                                                                None), "file type does not match."
+                    assert file_extension == EXTENSION_TYPE.get(
+                        FileUtils.get_extension(file_name), None
+                    ), "file type does not match."
         elif os.path.isfile(dataset_dir):  # support single file
             data_files.append(dataset_dir)
-            file_extension = EXTENSION_TYPE.get(FileUtils.get_extension(dataset_dir), None)
+            file_extension = EXTENSION_TYPE.get(
+                FileUtils.get_extension(dataset_dir), None
+            )
         else:
             raise ValueError("File not found.")
 
         from datasets import load_dataset
+
         dataset = load_dataset(
             file_extension,
             data_files=data_files,

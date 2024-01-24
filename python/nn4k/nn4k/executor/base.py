@@ -150,13 +150,17 @@ class LLMExecutor(NNExecutor, ABC):
     """
     Base Executor for LLM.
     """
+
     @classmethod
     def from_config(cls, nn_config: Union[str, dict]) -> "LLMExecutor":
         """
         Implement distribution logic for LLM, since we only support Huggingface Decode Only models for now,
         it is directly point to HFDecodeOnlyExecutor. Will use the hub management functions later on.
         """
-        from nn4k.executor.huggingface.hf_decode_only_executor import HFDecodeOnlyExecutor
+        from nn4k.executor.huggingface.hf_decode_only_executor import (
+            HFDecodeOnlyExecutor,
+        )
+
         return HFDecodeOnlyExecutor.from_config(nn_config)
 
     def execute_sft(self, args=None, callbacks=None, **kwargs):
@@ -179,21 +183,14 @@ class NNModelArgs:
     """
     Base NN4K-supported model definition and load related args.
     """
+
     nn_name: Optional[str] = field(
         default=None,
-        metadata={
-            "help": (
-                "NN4K model name"
-            )
-        },
+        metadata={"help": ("NN4K model name")},
     )
     nn_version: Optional[str] = field(
         default="default",
-        metadata={
-            "help": (
-                "NN4K model version, by default is 'default'"
-            )
-        },
+        metadata={"help": ("NN4K model version, by default is 'default'")},
     )
     nn_model_path: Optional[str] = field(
         default=None,
@@ -201,15 +198,10 @@ class NNModelArgs:
             "help": (
                 "model path dir, could be delivered by user or get managed in Hub."
             )
-        }
+        },
     )
     nn_device: Optional[str] = field(
-        default='auto',
-        metadata={
-            "help": (
-                "device to use to load model"
-            )
-        }
+        default="auto", metadata={"help": ("device to use to load model")}
     )
 
     def __post_init__(self):
@@ -221,35 +213,35 @@ class NNAdapterModelArgs(NNModelArgs):
     """
     One should use this args dataclass to enable adapter models.
     """
+
     adapter_name: str = field(
         default=None,
         metadata={
             "help": "adapter name. Should be provided if you want to sft or load a adapter model."
-        }
+        },
     )
     adapter_version: str = field(
         default="auto",
         metadata={
             "help": "adapter is designed to get managed by versions, by default is 'latest'"
-        }
+        },
     )
     adapter_type: str = field(
-        default="lora",
-        metadata={
-            "help": "adapter type, lora by default."
-        }
+        default="lora", metadata={"help": "adapter type, lora by default."}
     )
     adapter_path: str = field(
         default=None,
         metadata={
             "help": "adapter weight and config path, could be delivered by user or get managed in Hub."
-        }
+        },
     )
     adapter_config: Optional[dict] = field(
         default=None,
-        metadata={"help": "Only necessary if you want to init a new adapter model and train from scratch or resume"
-                          "from a checkpoint (in this case, should be the same as the previous adapter_config)."
-                          "Values are the same as peft config init args."},
+        metadata={
+            "help": "Only necessary if you want to init a new adapter model and train from scratch or resume"
+            "from a checkpoint (in this case, should be the same as the previous adapter_config)."
+            "Values are the same as peft config init args."
+        },
     )
 
     def __post_init__(self):

@@ -23,8 +23,9 @@ class HFModelArgs(NNAdapterModelArgs):
     Huggingface Model is designed to support adapter models such as lora, therefore should inherit from
     NNAdapterModelArgs dataclass
     """
+
     torch_dtype: Optional[str] = field(
-        default='auto',
+        default="auto",
         metadata={
             "help": (
                 "Override the default `torch.dtype` and load the model under this dtype. If `auto` is passed, the "
@@ -34,16 +35,22 @@ class HFModelArgs(NNAdapterModelArgs):
     )
     qlora_bits_and_bytes_config: Optional[dict] = field(
         default=None,
-        metadata={"help": "Quantization configs to load qlora, "
-                          "same as :class:`transformers.utils.quantization_config.BitsAndBytesConfig`"}
+        metadata={
+            "help": "Quantization configs to load qlora, "
+            "same as :class:`transformers.utils.quantization_config.BitsAndBytesConfig`"
+        },
     )
     trust_remote_code: bool = field(
         default=True,
-        metadata={"help": "Whether or not to allow for custom models defined on the Hub in their own modeling files."},
+        metadata={
+            "help": "Whether or not to allow for custom models defined on the Hub in their own modeling files."
+        },
     )
     from_tf: bool = field(
         default=False,
-        metadata={"help": " Load the model weights from a TensorFlow checkpoint save file, default to False"},
+        metadata={
+            "help": " Load the model weights from a TensorFlow checkpoint save file, default to False"
+        },
     )
 
     def __post_init__(self):
@@ -58,32 +65,43 @@ class HFSftArgs(HFModelArgs, TrainingArguments):
     """
     args to use for huggingface model sft task
     """
+
     train_dataset_path: Optional[str] = field(
         default=None,
-        metadata={"help": "Should not be None. A file or dir path to train dataset, If a dir path, "
-                          "all files inside should have the same file extension."},
+        metadata={
+            "help": "Should not be None. A file or dir path to train dataset, If a dir path, "
+            "all files inside should have the same file extension."
+        },
     )
     eval_dataset_path: Optional[str] = field(
         default=None,
-        metadata={"help": "A file or dir path to eval dataset. If a dir path, all files inside should have the same "
-                          "file extension. If set, do_eval flag will be set to True"},
+        metadata={
+            "help": "A file or dir path to eval dataset. If a dir path, all files inside should have the same "
+            "file extension. If set, do_eval flag will be set to True"
+        },
     )
-    input_max_length: int = field(
+    max_input_length: int = field(
         default=1024,
         metadata={"help": "max length of input"},
     )
     resume_from_checkpoint: Optional[str] = field(
         default=None,
-        metadata={"help": "The path to a folder with a valid checkpoint for your model."},
+        metadata={
+            "help": "The path to a folder with a valid checkpoint for your model."
+        },
     )
 
     def __post_init__(self):
         HFModelArgs.__post_init__(self)
         TrainingArguments.__post_init__(self)
-        assert self.train_dataset_path is not None, 'train_dataset_path must be set.'
+        assert self.train_dataset_path is not None, "train_dataset_path must be set."
         if self.train_dataset_path and not self.do_train:
             self.do_train = True
-            print(f"a train_dataset_path is set but do_train flag is not set, automatically set do_train to True")
+            print(
+                f"a train_dataset_path is set but do_train flag is not set, automatically set do_train to True"
+            )
         if self.eval_dataset_path and not self.do_eval:
             self.do_eval = True
-            print(f"a eval_dataset_path is set but do_eval flag is not set, automatically set do_eval to True")
+            print(
+                f"a eval_dataset_path is set but do_eval flag is not set, automatically set do_eval to True"
+            )

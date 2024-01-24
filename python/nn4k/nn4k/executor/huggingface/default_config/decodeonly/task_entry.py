@@ -7,5 +7,5 @@ def main():
     # NNInvoker.from_config("inferece_args.json").local_inference("你是谁")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
