@@ -24,7 +24,7 @@ class TestArgs:
         default=None,
         metadata={"help": ""},
     )
-    input_max_length: int = field(
+    max_input_length: int = field(
         default=1024,
         metadata={"help": ""},
     )
@@ -123,7 +123,7 @@ class TestConfigParsing(unittest.TestCase):
         args = {
             "input_columns": ["column1", "column2"],
             "is_bool": False,
-            "input_max_length": 256,
+            "max_input_length": 256,
             "lora_config": {"r": 1, "type": "lora"},
             "is_bool_int": 1,
             "extra_arg": "extra_configs",
@@ -136,7 +136,7 @@ class TestConfigParsing(unittest.TestCase):
         self.assertEqual(parsed_args.input_columns, ["column1", "column2"])
         self.assertEqual(parsed_args.is_bool, False)
         self.assertEqual(parsed_args.lora_config, {"type": "lora", "r": 1})
-        self.assertEqual(parsed_args.input_max_length, 256)
+        self.assertEqual(parsed_args.max_input_length, 256)
 
 
 if __name__ == "__main__":

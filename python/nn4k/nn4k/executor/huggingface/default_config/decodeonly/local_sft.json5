@@ -28,7 +28,7 @@
   //-- start training args
 //   "resume_from_checkpoint": "True", // only necessary if you want to resume training from checkpoint
   "trust_remote_code": true,
-  "input_max_length": 256, // input max length. Inputs will be cut down to this length
+  "max_input_length": 256, // input max length. Inputs will be cut down to this length
   //-- start: same as huggingface trainer args
   "per_device_train_batch_size": 1,
   "gradient_accumulation_steps": 1,
