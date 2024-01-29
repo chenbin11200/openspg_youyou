@@ -2,9 +2,12 @@ import os
 
 import safetensors
 import torch
-from accelerate.utils import load_fsdp_model
+from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
+from packaging import version
+
 from peft import PeftModel
 from transformers import PretrainedConfig, Trainer, __version__
+from transformers.integrations import is_deepspeed_available
 from transformers.modeling_utils import load_sharded_checkpoint
 from transformers.trainer import logger
 from transformers.utils import (
@@ -15,9 +18,31 @@ from transformers.utils import (
     SAFE_WEIGHTS_NAME,
     WEIGHTS_INDEX_NAME,
     WEIGHTS_NAME,
+    is_accelerate_available,
     is_peft_available,
     is_sagemaker_mp_enabled,
 )
+
+if is_accelerate_available():
+    from accelerate import Accelerator, skip_first_batches
+    from accelerate import __version__ as accelerate_version
+    from accelerate.utils import (
+        DistributedDataParallelKwargs,
+        GradientAccumulationPlugin,
+        load_fsdp_model,
+        load_fsdp_optimizer,
+        save_fsdp_model,
+        save_fsdp_optimizer,
+    )
+
+    DATA_SAMPLERS = [RandomSampler]
+    if version.parse(accelerate_version) > version.parse("0.23.0"):
+        from accelerate.data_loader import SeedableRandomSampler
+
+        DATA_SAMPLERS += [SeedableRandomSampler]
+
+    if is_deepspeed_available():
+        from accelerate.utils import DeepSpeedSchedulerWrapper
 
 
 class NNHFTrainer(Trainer):

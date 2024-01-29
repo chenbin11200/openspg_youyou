@@ -205,7 +205,7 @@ class NNModelArgs:
     )
 
     def __post_init__(self):
-        assert self.nn_name is not None, "nn_name must be set"
+        pass
 
 
 @dataclass
