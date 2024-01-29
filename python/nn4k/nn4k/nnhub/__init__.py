@@ -137,10 +137,10 @@ class SimpleNNHub(NNHub):
     def _add_local_executor(self, nn_config):
         from nn4k.consts import NN_NAME_KEY, NN_NAME_TEXT
         from nn4k.consts import NN_VERSION_KEY, NN_VERSION_TEXT
-        from nn4k.executor.hugging_face import HfLLMExecutor
+        from nn4k.executor.huggingface.base.hf_llm_executor import HFLLMExecutor
         from nn4k.utils.config_parsing import get_string_field
 
-        executor = HfLLMExecutor.from_config(nn_config)
+        executor = HFLLMExecutor.from_config(nn_config)
         nn_name = get_string_field(nn_config, NN_NAME_KEY, NN_NAME_TEXT)
         nn_version = nn_config.get(NN_VERSION_KEY)
         if nn_version is not None:
@@ -156,10 +156,12 @@ class SimpleNNHub(NNHub):
         if is_openai_invoker(nn_config):
             invoker = OpenAIInvoker.from_config(nn_config)
             return invoker
-
-        if is_local_invoker(nn_config):
+        # TODO NN4K: this will be replaced once we publish the SimpleHub solution. Now we only have openai invoker
+        #  and LLMInvoker
+        # if is_local_invoker(nn_config):
+        else:
             invoker = LLMInvoker.from_config(nn_config)
-            self._add_local_executor(nn_config)
+            # self._add_local_executor(nn_config)
             return invoker
 
-        return None
+        # return None

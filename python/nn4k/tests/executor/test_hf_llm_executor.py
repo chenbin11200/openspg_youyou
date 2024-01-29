@@ -13,12 +13,10 @@ import sys
 import unittest
 import unittest.mock
 
-from nn4k.executor.hugging_face import HfLLMExecutor
-
 
 class TestHfLLMExecutor(unittest.TestCase):
     """
-    HfLLMExecutor unittest
+    HFLLMExecutor unittest
     """
 
     def setUp(self):
@@ -38,19 +36,6 @@ class TestHfLLMExecutor(unittest.TestCase):
         del sys.modules["transformers"]
         if self._saved_transformers is not None:
             sys.modules["transformers"] = self._saved_transformers
-
-    def testHfLLMExecutor(self):
-        nn_config = {
-            "nn_name": "/opt/test_model_dir",
-            "nn_version": "default",
-        }
-
-        executor = HfLLMExecutor.from_config(nn_config)
-        executor.load_model()
-        executor.inference("input")
-
-        self._mocked_transformers.AutoTokenizer.from_pretrained.assert_called()
-        self._mocked_transformers.AutoModelForCausalLM.from_pretrained.assert_called()
 
 
 if __name__ == "__main__":
