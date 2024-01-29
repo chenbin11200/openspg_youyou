@@ -205,7 +205,9 @@ class NNModelArgs:
     )
 
     def __post_init__(self):
-        pass
+        assert (
+            self.nn_name is not None or self.nn_model_path is not None
+        ), "either nn_name or nn_model_path has to be provided"
 
 
 @dataclass
