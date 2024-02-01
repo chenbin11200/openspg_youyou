@@ -1,0 +1,6 @@
+{
+  // -- base model info
+  "nn_name": "Baichuan", //nn_name and nn_version are necessary for detect the corrent invoker or executor
+  "nn_version": "7B-chat",
+  "nn_model_path": "/mnt/new_nas/alps/modelhub/layer/baichuan-inc.Baichuan2-7B-Chat/main/20231105235520/hf_model" // local model path
+}

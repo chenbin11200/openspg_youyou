@@ -188,6 +188,8 @@ class HFLLMExecutor(LLMExecutor):
         if self.model_mode == mode and self._model is not None:
             return
 
+        args = args or self._init_args
+
         from transformers import HfArgumentParser
         from nn4k.executor.huggingface import HFModelArgs
 

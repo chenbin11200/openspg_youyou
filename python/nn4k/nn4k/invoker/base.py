@@ -36,6 +36,7 @@ class NNInvoker(ABC):
     def __init__(self, init_args: dict, **kwargs):
         self._init_args = init_args
         self._kwargs = kwargs
+        self.inference_warmed_up = False
 
     @property
     def init_args(self):
@@ -161,6 +162,12 @@ class LLMInvoker(NNInvoker):
         """
         Implement local inference for local invoker.
         """
+        if not self.inference_warmed_up:
+            print("warming up the model for inference, only happen for the first time...")
+            self.warmup_local_model()
+            self.inference_warmed_up = True
+            print("inference model is warmed up")
+
         return self._nn_executor.inference(data, **kwargs)
 
     def warmup_local_model(self):
@@ -179,13 +186,14 @@ class LLMInvoker(NNInvoker):
                 self.init_args, NN_VERSION_KEY, NN_VERSION_TEXT
             )
         hub = NNHub.get_instance()
-        executor = hub.get_model_executor(nn_name, nn_version)
+        # executor = hub.get_model_executor(nn_name, nn_version)
+        executor = LLMExecutor.from_config(self.init_args)
         if executor is None:
             message = "model %r version %r " % (nn_name, nn_version)
             message += "is not found in the model hub"
             raise RuntimeError(message)
         self._nn_executor: LLMExecutor = executor
-        self._nn_executor.load_model("inference")
+        self._nn_executor.load_model(mode="inference")
         self._nn_executor.warmup_inference()
 
     @classmethod
