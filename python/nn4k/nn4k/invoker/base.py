@@ -15,6 +15,7 @@ from enum import Enum
 from typing import Union
 
 from nn4k.executor import LLMExecutor
+from nn4k.utils.args_utils import ArgsUtils
 
 
 class SubmitMode(Enum):
@@ -119,7 +120,7 @@ class NNInvoker(ABC):
             f"{self.__class__.__name__} does not support remote inference."
         )
 
-    def local_inference(self, data, **kwargs):
+    def local_inference(self, data, args: dict, **kwargs):
         """
         Implement local inference in derived invoker classes.
         """
@@ -142,12 +143,9 @@ class LLMInvoker(NNInvoker):
         raise NotImplementedError(f"{self.__class__.__name__} does not support SFT.")
 
     def local_sft(self, args: dict = None):
-        sft_args = copy.deepcopy(self.init_args)
-        args = args or {}
-        sft_args.update(args)
+        sft_args = ArgsUtils.update_args(self.init_args, args)
 
         from nn4k.executor import LLMExecutor
-
         LLMExecutor.from_config(sft_args).execute_sft()
 
     def submit_rl_tuning(self, submit_mode: SubmitMode = SubmitMode.K8s):
@@ -158,17 +156,21 @@ class LLMInvoker(NNInvoker):
             f"{self.__class__.__name__} does not support RL-Tuning."
         )
 
-    def local_inference(self, data, **kwargs):
+    def local_inference(self, data, args: dict, **kwargs):
         """
         Implement local inference for local invoker.
         """
+        args = ArgsUtils.update_args(self.init_args, args)
+
         if not self.inference_warmed_up:
-            print("warming up the model for inference, only happen for the first time...")
+            print(
+                "warming up the model for inference, only happen for the first time..."
+            )
             self.warmup_local_model()
             self.inference_warmed_up = True
             print("inference model is warmed up")
 
-        return self._nn_executor.inference(data, **kwargs)
+        return self._nn_executor.inference(inputs=data, args=args, **kwargs)
 
     def warmup_local_model(self):
         """
@@ -193,7 +195,7 @@ class LLMInvoker(NNInvoker):
             message += "is not found in the model hub"
             raise RuntimeError(message)
         self._nn_executor: LLMExecutor = executor
-        self._nn_executor.load_model(mode="inference")
+        self._nn_executor.load_model("inference")
         self._nn_executor.warmup_inference()
 
     @classmethod

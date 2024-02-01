@@ -20,6 +20,7 @@ from transformers import AutoConfig, AutoTokenizer, Trainer
 from nn4k.executor import LLMExecutor
 from .hf_args import HFSftArgs, HFModelArgs
 from nn4k.executor.huggingface.nn_hf_trainer import NNHFTrainer
+from nn4k.utils.args_utils import ArgsUtils
 
 
 class HFLLMExecutor(LLMExecutor):
@@ -207,39 +208,41 @@ class HFLLMExecutor(LLMExecutor):
         if self.tokenizer.pad_token_id is None:
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
-    def inference(
-        self,
-        data,
-        max_input_length: int = 1024,
-        max_output_length: int = 1024,
-        do_sample: bool = False,
-        **kwargs,
-    ):
+    def inference(self, inputs, args: dict = None, **kwargs):
+        infer_args = ArgsUtils.update_args(self.init_args, args)
+
+        from transformers import HfArgumentParser
+        from nn4k.executor.base import NNInferenceArgs
+
+        parser = HfArgumentParser(NNInferenceArgs)
+        hf_infer_args: NNInferenceArgs
+        hf_infer_args, *_ = parser.parse_dict(infer_args, allow_extra_keys=True)
+
         model = self.model
         tokenizer = self.tokenizer
+
         input_ids = tokenizer(
-            data,
-            padding=True,
-            return_token_type_ids=False,
-            return_tensors="pt",
-            truncation=True,
-            max_length=max_input_length,
+            inputs,
+            max_length=hf_infer_args.max_input_length,
+            return_tensors=hf_infer_args.tokenize_return_tensors,
+            **hf_infer_args.tokenize_config,
         ).to(model.device)
+
         output_ids = model.generate(
             **input_ids,
-            max_new_tokens=max_output_length,
-            do_sample=do_sample,
-            eos_token_id=tokenizer.eos_token_id,
-            pad_token_id=tokenizer.pad_token_id,
-            **kwargs,
+            max_new_tokens=hf_infer_args.max_output_length,
+            **hf_infer_args.generate_config,
         )
 
         outputs = [
             tokenizer.decode(
-                output_id[len(input_ids["input_ids"][idx]) :], skip_special_tokens=True
+                output_id[len(input_ids["input_ids"][idx]) :],
+                skip_special_tokens=hf_infer_args.decode_skip_special_tokens,
+                **hf_infer_args.decode_config,
             )
             for idx, output_id in enumerate(output_ids)
         ]
+
         return outputs
 
     @abstractmethod

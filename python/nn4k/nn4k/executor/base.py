@@ -71,7 +71,7 @@ class NNExecutor(ABC):
             f"{self.__class__.__name__} does not support batch inference."
         )
 
-    def inference(self, data, args=None, **kwargs):
+    def inference(self, inputs, args: dict = None, **kwargs):
         """
         The entry point of inference. Usually for local invokers or model services.
         """
@@ -248,3 +248,22 @@ class NNAdapterModelArgs(NNModelArgs):
 
     def __post_init__(self):
         super().__post_init__()
+
+
+@dataclass
+class NNInferenceArgs:
+    max_input_length: int = field(
+        default=1024,
+        metadata={"help": ""},
+    )
+    max_output_length: int = field(
+        default=1024,
+        metadata={"help": ""},
+    )
+    tokenize_return_tensors: str = field(default="pt", metadata={"help": ""})
+    tokenize_config: dict = field(default=None, metadata={"help": ""})
+
+    generate_config: dict = field(default=None, metadata={"help": ""})
+
+    decode_skip_special_tokens: bool = field(default=True, metadata={"help": ""})
+    decode_config: dict = field(default=None, metadata={"help": ""})
