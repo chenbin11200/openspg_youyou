@@ -137,7 +137,7 @@ class SimpleNNHub(NNHub):
     def _add_local_executor(self, nn_config):
         from nn4k.consts import NN_NAME_KEY, NN_NAME_TEXT
         from nn4k.consts import NN_VERSION_KEY, NN_VERSION_TEXT
-        from nn4k.executor.huggingface.base.hf_llm_executor import HFLLMExecutor
+        from nn4k.executor.huggingface import HFLLMExecutor
         from nn4k.utils.config_parsing import get_string_field
 
         executor = HFLLMExecutor.from_config(nn_config)
