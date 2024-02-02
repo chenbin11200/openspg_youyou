@@ -208,8 +208,11 @@ class HFLLMExecutor(LLMExecutor):
         if self.tokenizer.pad_token_id is None:
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
-    def inference(self, inputs, args: dict = None, **kwargs):
-        infer_args = ArgsUtils.update_args(self.init_args, args)
+    def inference(self, inputs, args: Union[dict, str] = None, **kwargs):
+        """
+
+        """
+        infer_args = ArgsUtils.update_args(self.init_args, kwargs)
 
         from transformers import HfArgumentParser
         from nn4k.executor.base import NNInferenceArgs
