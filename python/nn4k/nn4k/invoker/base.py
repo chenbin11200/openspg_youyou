@@ -161,7 +161,7 @@ class LLMInvoker(NNInvoker):
         """
         Implement local inference for local invoker.
         """
-        args = ArgsUtils.handle_dict_config(**kwargs)
+        args = ArgsUtils.handle_dict_config(kwargs)
 
         if not self.inference_warmed_up:
             print(
@@ -196,7 +196,7 @@ class LLMInvoker(NNInvoker):
             message += "is not found in the model hub"
             raise RuntimeError(message)
         self._nn_executor: LLMExecutor = executor
-        self._nn_executor.load_model("inference")
+        self._nn_executor.load_model(mode="inference")
         self._nn_executor.warmup_inference()
 
     @classmethod

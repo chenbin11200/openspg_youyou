@@ -261,7 +261,8 @@ class HFLLMExecutor(LLMExecutor):
             ):
                 import re
 
-                start_index = re.search("(\\n)+", output_text).start()
+                match = re.search("(\\n)+", output_text)
+                start_index = match.end()
                 if start_index < len(output_text) - 1:
                     output_text = output_text[start_index:]
 
