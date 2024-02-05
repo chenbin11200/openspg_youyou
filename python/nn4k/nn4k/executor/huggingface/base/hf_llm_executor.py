@@ -12,13 +12,14 @@
 import os
 import typing
 from abc import abstractmethod
+from itertools import repeat
 from typing import Optional, Union
 
 from torch.utils.data import Dataset
 from transformers import AutoConfig, AutoTokenizer, Trainer
 
 from nn4k.executor import LLMExecutor
-from .hf_args import HFSftArgs, HFModelArgs
+from .hf_args import HFInferArgs, HFSftArgs, HFModelArgs
 from nn4k.executor.huggingface.nn_hf_trainer import NNHFTrainer
 from nn4k.utils.args_utils import ArgsUtils
 
@@ -208,17 +209,18 @@ class HFLLMExecutor(LLMExecutor):
         if self.tokenizer.pad_token_id is None:
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
-    def inference(self, inputs, args: Union[dict, str] = None, **kwargs):
+    def inference(self, inputs, **kwargs):
         """
-
+        self.__init_args__
+        args
+        kwargs
         """
         infer_args = ArgsUtils.update_args(self.init_args, kwargs)
 
         from transformers import HfArgumentParser
-        from nn4k.executor.base import NNInferenceArgs
 
-        parser = HfArgumentParser(NNInferenceArgs)
-        hf_infer_args: NNInferenceArgs
+        parser = HfArgumentParser(HFInferArgs)
+        hf_infer_args: HFInferArgs
         hf_infer_args, *_ = parser.parse_dict(infer_args, allow_extra_keys=True)
 
         model = self.model
@@ -226,27 +228,43 @@ class HFLLMExecutor(LLMExecutor):
 
         input_ids = tokenizer(
             inputs,
-            max_length=hf_infer_args.max_input_length,
-            return_tensors=hf_infer_args.tokenize_return_tensors,
             **hf_infer_args.tokenize_config,
         ).to(model.device)
 
+        if hf_infer_args.stop_sequence is not None:
+            stop_sequence = hf_infer_args.stop_sequence
+            stop_sequence_ids = self.tokenizer.encode(
+                stop_sequence, add_special_tokens=False
+            )
+            if len(stop_sequence_ids) > 1:
+                print(  # TODO: use logger instead
+                    "Warning: Stopping on a multiple token sequence is not yet supported on transformers. "
+                    "The first token of the stop sequence will be used as the stop sequence string in the interim."
+                )
+            hf_infer_args.generate_config["eos_token_id"] = stop_sequence_ids[0]
+
         output_ids = model.generate(
             **input_ids,
-            max_new_tokens=hf_infer_args.max_output_length,
+            # max_new_tokens=hf_infer_args.max_output_length,
             **hf_infer_args.generate_config,
         )
 
-        outputs = [
-            tokenizer.decode(
-                output_id[len(input_ids["input_ids"][idx]) :],
-                skip_special_tokens=hf_infer_args.decode_skip_special_tokens,
-                **hf_infer_args.decode_config,
-            )
-            for idx, output_id in enumerate(output_ids)
-        ]
+        output_text = map(
+            self._post_generate,
+            output_ids,
+            input_ids,
+            repeat(**hf_infer_args.decode_config),
+        )
 
-        return outputs
+        return output_text
+
+    def _post_generate(self, output_id, input_id, **kwargs):
+        if not kwargs.get("return_input_text", False):
+            output_id = output_id[len(input_id) :]
+
+        output = self.tokenizer.decode(output_id, **kwargs)
+
+        return output
 
     @abstractmethod
     def _hf_model_loader(

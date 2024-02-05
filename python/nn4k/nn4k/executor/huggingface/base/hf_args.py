@@ -15,6 +15,7 @@ from typing import Optional
 from transformers import TrainingArguments
 
 from nn4k.executor import NNAdapterModelArgs
+from nn4k.executor.base import NNInferenceArgs
 
 
 @dataclass
@@ -105,3 +106,43 @@ class HFSftArgs(HFModelArgs, TrainingArguments):
             print(
                 f"a eval_dataset_path is set but do_eval flag is not set, automatically set do_eval to True"
             )
+
+
+@dataclass
+class HFInferArgs(NNInferenceArgs):
+    tokenize_config: dict = field(
+        default_factory=lambda: {
+            "add_special_tokens": False,
+            "padding": False,
+            "truncation": False,
+        },
+        metadata={"help": "padding: https://huggingface.co/docs/transformers/pad_truncation#padding-and-truncation" },
+    )
+
+    decode_config: dict = field(
+        default_factory=lambda: {
+            "skip_special_tokens": True,
+            "clean_up_tokenization_spaces": True
+        }
+    )
+
+    def update_if_not_none(self, from_key, to_dict, to_key=None):
+        to_key = to_key or from_key
+        from_value = self.__getattribute__(from_key)
+        if from_value is not None:
+            self.__getattribute__(to_dict)[to_key] = from_value
+
+    def __post_init__(self):
+        super().__post_init__()
+        # merging generation args
+        self.update_if_not_none("max_output_length", "generate_config", "max_new_tokens")
+
+        self.update_if_not_none("do_sample", "generate_config")
+        self.update_if_not_none("temperature", "generate_config")
+        self.update_if_not_none("top_k", "generate_config")
+        self.update_if_not_none("top_p", "generate_config")
+        self.update_if_not_none("repetition_penalty", "generate_config")
+
+        # merging tokenize args
+        self.update_if_not_none("max_input_length", "tokenize_config", "max_length")
+        self.update_if_not_none("tokenize_return_tensors", "tokenize_config", "return_tensors")

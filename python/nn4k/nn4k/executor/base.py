@@ -71,7 +71,7 @@ class NNExecutor(ABC):
             f"{self.__class__.__name__} does not support batch inference."
         )
 
-    def inference(self, inputs, args: dict = None, **kwargs):
+    def inference(self, inputs, **kwargs):
         """
         The entry point of inference. Usually for local invokers or model services.
         """
@@ -252,18 +252,52 @@ class NNAdapterModelArgs(NNModelArgs):
 
 @dataclass
 class NNInferenceArgs:
-    max_input_length: int = field(
-        default=1024,
-        metadata={"help": ""},
+    max_input_length: Optional[int] = field(
+        default=None,
+        metadata={"help": "aka max_length in tokenize config"},
     )
     max_output_length: int = field(
         default=1024,
+        metadata={"help": "aka max_new_tokens"},
+    )
+    return_input_text: Optional[bool] = field(
+        default=False,
+        metadata={"help": "return input in output texts"},
+    )
+    stop_sequence: Optional[str] = field(
+        default=None,
+        metadata={"help": ""}
+    )
+    do_sample: bool = field(
+        default=False,
+    )
+    temperature: float = field(
+        default=1.0,
         metadata={"help": ""},
     )
-    tokenize_return_tensors: str = field(default="pt", metadata={"help": ""})
-    tokenize_config: dict = field(default=None, metadata={"help": ""})
+    top_k: Optional[int] = field(
+        default=50,
+        metadata={"help": ""},
+    )
+    top_p: Optional[float] = field(
+        default=1.0,
+        metadata={"help": ""},
+    )
+    repetition_penalty: Optional[float] = field(
+        default=1.0,
+        metadata={
+            "help": "Parameter for repetition penalty that will be used by default in the generate method of the model. 1.0 means no penalty."
+        },
+    )
 
     generate_config: dict = field(default=None, metadata={"help": ""})
 
-    decode_skip_special_tokens: bool = field(default=True, metadata={"help": ""})
+    tokenize_return_tensors: str = field(default="pt", metadata={"help": ""})
+    tokenize_config: dict = field(
+        default=None,
+        metadata={"help": ""})
+
     decode_config: dict = field(default=None, metadata={"help": ""})
+
+    def __post_init__(self):
+        pass

@@ -120,7 +120,7 @@ class NNInvoker(ABC):
             f"{self.__class__.__name__} does not support remote inference."
         )
 
-    def local_inference(self, data, args: dict, **kwargs):
+    def local_inference(self, data, **kwargs):
         """
         Implement local inference in derived invoker classes.
         """
@@ -156,11 +156,11 @@ class LLMInvoker(NNInvoker):
             f"{self.__class__.__name__} does not support RL-Tuning."
         )
 
-    def local_inference(self, data, args: dict, **kwargs):
+    def local_inference(self, data, **kwargs):
         """
         Implement local inference for local invoker.
         """
-        args = ArgsUtils.update_args(self.init_args, args)
+        args = ArgsUtils.handle_dict_config(**kwargs)
 
         if not self.inference_warmed_up:
             print(
@@ -170,7 +170,7 @@ class LLMInvoker(NNInvoker):
             self.inference_warmed_up = True
             print("inference model is warmed up")
 
-        return self._nn_executor.inference(inputs=data, args=args, **kwargs)
+        return self._nn_executor.inference(inputs=data, **args)
 
     def warmup_local_model(self):
         """
