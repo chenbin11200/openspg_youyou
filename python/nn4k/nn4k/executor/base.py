@@ -264,10 +264,7 @@ class NNInferenceArgs:
         default=False,
         metadata={"help": "return input in output texts"},
     )
-    stop_sequence: Optional[str] = field(
-        default=None,
-        metadata={"help": ""}
-    )
+    stop_sequence: Optional[str] = field(default=None, metadata={"help": ""})
     do_sample: bool = field(
         default=False,
     )
@@ -290,12 +287,10 @@ class NNInferenceArgs:
         },
     )
 
-    generate_config: dict = field(default=None, metadata={"help": ""})
+    generate_config: dict = field(default_factory=lambda: {}, metadata={"help": ""})
 
     tokenize_return_tensors: str = field(default="pt", metadata={"help": ""})
-    tokenize_config: dict = field(
-        default=None,
-        metadata={"help": ""})
+    tokenize_config: dict = field(default=None, metadata={"help": ""})
 
     decode_config: dict = field(default=None, metadata={"help": ""})
 

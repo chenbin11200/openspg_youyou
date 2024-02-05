@@ -110,19 +110,25 @@ class HFSftArgs(HFModelArgs, TrainingArguments):
 
 @dataclass
 class HFInferArgs(NNInferenceArgs):
+    delete_heading_new_lines: bool = field(
+        default=False,
+    )
+
     tokenize_config: dict = field(
         default_factory=lambda: {
             "add_special_tokens": False,
             "padding": False,
             "truncation": False,
         },
-        metadata={"help": "padding: https://huggingface.co/docs/transformers/pad_truncation#padding-and-truncation" },
+        metadata={
+            "help": "padding: https://huggingface.co/docs/transformers/pad_truncation#padding-and-truncation"
+        },
     )
 
     decode_config: dict = field(
         default_factory=lambda: {
             "skip_special_tokens": True,
-            "clean_up_tokenization_spaces": True
+            "clean_up_tokenization_spaces": True,
         }
     )
 
@@ -135,7 +141,9 @@ class HFInferArgs(NNInferenceArgs):
     def __post_init__(self):
         super().__post_init__()
         # merging generation args
-        self.update_if_not_none("max_output_length", "generate_config", "max_new_tokens")
+        self.update_if_not_none(
+            "max_output_length", "generate_config", "max_new_tokens"
+        )
 
         self.update_if_not_none("do_sample", "generate_config")
         self.update_if_not_none("temperature", "generate_config")
@@ -145,4 +153,6 @@ class HFInferArgs(NNInferenceArgs):
 
         # merging tokenize args
         self.update_if_not_none("max_input_length", "tokenize_config", "max_length")
-        self.update_if_not_none("tokenize_return_tensors", "tokenize_config", "return_tensors")
+        self.update_if_not_none(
+            "tokenize_return_tensors", "tokenize_config", "return_tensors"
+        )

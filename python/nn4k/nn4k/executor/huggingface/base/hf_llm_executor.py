@@ -12,7 +12,6 @@
 import os
 import typing
 from abc import abstractmethod
-from itertools import repeat
 from typing import Optional, Union
 
 from torch.utils.data import Dataset
@@ -245,26 +244,30 @@ class HFLLMExecutor(LLMExecutor):
 
         output_ids = model.generate(
             **input_ids,
-            # max_new_tokens=hf_infer_args.max_output_length,
             **hf_infer_args.generate_config,
         )
 
-        output_text = map(
-            self._post_generate,
-            output_ids,
-            input_ids,
-            repeat(**hf_infer_args.decode_config),
-        )
+        output_texts = []
+        for idx, output_id in enumerate(output_ids):
+            if not hf_infer_args.return_input_text:
+                output_id = output_id[len(input_ids["input_ids"][idx]) :]
+            output_text = self.tokenizer.decode(
+                output_id, **hf_infer_args.decode_config
+            )
 
-        return output_text
+            if (
+                not hf_infer_args.return_input_text
+                and hf_infer_args.delete_heading_new_lines
+            ):
+                import re
 
-    def _post_generate(self, output_id, input_id, **kwargs):
-        if not kwargs.get("return_input_text", False):
-            output_id = output_id[len(input_id) :]
+                start_index = re.search("(\\n)+", output_text).start()
+                if start_index < len(output_text) - 1:
+                    output_text = output_text[start_index:]
 
-        output = self.tokenizer.decode(output_id, **kwargs)
+            output_texts.append(output_text)
 
-        return output
+        return output_texts
 
     @abstractmethod
     def _hf_model_loader(

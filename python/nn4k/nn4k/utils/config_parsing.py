@@ -33,6 +33,7 @@ def preprocess_config(nn_config: Union[str, dict]) -> dict:
             return nn_config
         elif isinstance(nn_config, str):
             from nn4k.utils.args_utils import ArgsUtils
+
             return ArgsUtils.load_config_dict_from_file(nn_config)
         else:
             raise ValueError(
