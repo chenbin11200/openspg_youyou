@@ -53,6 +53,13 @@ class HFModelArgs(NNAdapterModelArgs):
             "help": " Load the model weights from a TensorFlow checkpoint save file, default to False"
         },
     )
+    padding_side: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Padding side of the tokenizer when padding batch inputs",
+            "choices": [None, "left", "right"],
+        },
+    )
 
     def __post_init__(self):
         super().__post_init__()

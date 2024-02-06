@@ -195,18 +195,25 @@ class HFLLMExecutor(LLMExecutor):
         from nn4k.executor.huggingface import HFModelArgs
 
         parser = HfArgumentParser(HFModelArgs)
+        hf_model_args: HFModelArgs
         hf_model_args, *_ = parser.parse_dict(args, allow_extra_keys=True)
 
         self.model_mode = mode
         self._tokenizer = self._hf_tokenizer_loader(hf_model_args)
+
+        # TODO thinking about resume checkpoint in loading steps
         self._model = self._hf_model_loader(
-            hf_model_args, mode, hf_model_args.nn_device
+            args=hf_model_args,
+            mode=mode,
+            device=hf_model_args.nn_device
         )
 
         if self.tokenizer.eos_token_id is None:
             self.tokenizer.eos_token_id = self.model.config.eos_token_id
         if self.tokenizer.pad_token_id is None:
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
+        if hf_model_args.padding_side is not None:
+            self.tokenizer.padding_side = hf_model_args.padding_side
 
     def inference(self, inputs, **kwargs):
         """
