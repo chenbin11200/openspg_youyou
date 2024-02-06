@@ -269,9 +269,10 @@ class HFLLMExecutor(LLMExecutor):
                 import re
 
                 match = re.search("(\\n)+", output_text)
-                start_index = match.end()
-                if start_index < len(output_text) - 1:
-                    output_text = output_text[start_index:]
+                if match is not None:
+                    start_index = match.end()
+                    if start_index < len(output_text) - 1:
+                        output_text = output_text[start_index:]
 
             output_texts.append(output_text)
 

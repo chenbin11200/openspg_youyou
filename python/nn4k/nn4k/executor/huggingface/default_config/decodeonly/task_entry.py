@@ -13,12 +13,15 @@ from nn4k.invoker.base import NNInvoker
 
 
 def main():
+    # example for local sft
     # NNInvoker.from_config("local_sft.json5").local_sft()
-    # Inference example, not implemented yet.
-    # NNInvoker.from_config("inferece_args.json").local_inference("你是谁")
 
-    invoker = NNInvoker.from_config("local_inference.json5")
-    print(invoker.local_inference("你是谁"))
+    # example for local inference
+    invoker = NNInvoker.from_config("local_infer.json5").local_inference(
+        "What could LLM do for human?",
+        tokenize_config={"padding": True},
+        delete_heading_new_lines=True,
+    )
 
 
 if __name__ == "__main__":
