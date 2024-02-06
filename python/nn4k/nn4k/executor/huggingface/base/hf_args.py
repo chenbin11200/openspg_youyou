@@ -119,6 +119,11 @@ class HFSftArgs(HFModelArgs, TrainingArguments):
 class HFInferArgs(NNInferenceArgs):
     delete_heading_new_lines: bool = field(
         default=False,
+        metadata={
+            "help": "sometimes the output will have a additional question mark and new line marks in the beginning"
+            "try to get rid of these marks by setting this to True. Different model will have different "
+            "behavior, please check the result carefully."
+        },
     )
 
     tokenize_config: dict = field(
@@ -136,30 +141,17 @@ class HFInferArgs(NNInferenceArgs):
         default_factory=lambda: {
             "skip_special_tokens": True,
             "clean_up_tokenization_spaces": True,
-        }
+        },
+        metadata={
+            "help": "check https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.PreTrainedTokenizer.__call__"
+        },
     )
-
-    def update_if_not_none(self, from_key, to_dict, to_key=None):
-        to_key = to_key or from_key
-        from_value = self.__getattribute__(from_key)
-        if from_value is not None:
-            self.__getattribute__(to_dict)[to_key] = from_value
 
     def __post_init__(self):
         super().__post_init__()
-        # merging generation args
+
+        # HF specific map
         self.update_if_not_none(
             "max_output_length", "generate_config", "max_new_tokens"
         )
-
-        self.update_if_not_none("do_sample", "generate_config")
-        self.update_if_not_none("temperature", "generate_config")
-        self.update_if_not_none("top_k", "generate_config")
-        self.update_if_not_none("top_p", "generate_config")
-        self.update_if_not_none("repetition_penalty", "generate_config")
-
-        # merging tokenize args
         self.update_if_not_none("max_input_length", "tokenize_config", "max_length")
-        self.update_if_not_none(
-            "tokenize_return_tensors", "tokenize_config", "return_tensors"
-        )

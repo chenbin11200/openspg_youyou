@@ -203,9 +203,7 @@ class HFLLMExecutor(LLMExecutor):
 
         # TODO thinking about resume checkpoint in loading steps
         self._model = self._hf_model_loader(
-            args=hf_model_args,
-            mode=mode,
-            device=hf_model_args.nn_device
+            args=hf_model_args, mode=mode, device=hf_model_args.nn_device
         )
 
         if self.tokenizer.eos_token_id is None:
@@ -216,11 +214,6 @@ class HFLLMExecutor(LLMExecutor):
             self.tokenizer.padding_side = hf_model_args.padding_side
 
     def inference(self, inputs, **kwargs):
-        """
-        self.__init_args__
-        args
-        kwargs
-        """
         infer_args = ArgsUtils.update_args(self.init_args, kwargs)
 
         from transformers import HfArgumentParser
