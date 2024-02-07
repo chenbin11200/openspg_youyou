@@ -9,15 +9,14 @@
 # is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 # or implied.
 
-import copy
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Union
 
-from nn4k.utils.class_importing import dynamic_import_class
-
 from nn4k.executor import LLMExecutor
 from nn4k.utils.args_utils import ArgsUtils
+from nn4k.utils.class_importing import dynamic_import_class
+from nn4k.utils.logger import logger
 
 
 class SubmitMode(Enum):
@@ -165,12 +164,12 @@ class LLMInvoker(NNInvoker):
         args = ArgsUtils.handle_dict_config(kwargs)
 
         if not self.inference_warmed_up:
-            print(
+            logger.info(
                 "warming up the model for inference, only happen for the first time..."
             )
             self.warmup_local_model()
             self.inference_warmed_up = True
-            print("inference model is warmed up")
+            logger.info("inference model is warmed up")
 
         return self._nn_executor.inference(inputs=data, **args)
 

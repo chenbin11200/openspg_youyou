@@ -18,6 +18,7 @@ from torch.utils.data import Dataset
 from transformers import AutoConfig, AutoTokenizer, Trainer
 
 from nn4k.executor import LLMExecutor
+from nn4k.utils.logger import logger
 from .hf_args import HFInferArgs, HFSftArgs, HFModelArgs
 from nn4k.executor.huggingface.nn_hf_trainer import NNHFTrainer
 from nn4k.utils.args_utils import ArgsUtils
@@ -236,7 +237,7 @@ class HFLLMExecutor(LLMExecutor):
                 stop_sequence, add_special_tokens=False
             )
             if len(stop_sequence_ids) > 1:
-                print(  # TODO: use logger instead
+                logger.warn(
                     "Warning: Stopping on a multiple token sequence is not yet supported on transformers. "
                     "The first token of the stop sequence will be used as the stop sequence string in the interim."
                 )

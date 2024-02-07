@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union, Tuple, Type
 
 from nn4k.executor import NNExecutor
+from nn4k.utils.logger import logger
 
 
 class NNHub(ABC):
@@ -111,7 +112,7 @@ class SimpleNNHub(NNHub):
     ) -> str:
         from nn4k.consts import NN_VERSION_DEFAULT
 
-        print(
+        logger.warn(
             "WARNING: You are using SimpleNNHub which can only maintain models in memory without data persistence!"
         )
         if version is None:

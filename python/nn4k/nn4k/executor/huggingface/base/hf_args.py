@@ -16,6 +16,7 @@ from transformers import TrainingArguments
 
 from nn4k.executor import NNAdapterModelArgs
 from nn4k.executor.base import NNInferenceArgs
+from nn4k.utils.logger import logger
 
 
 @dataclass
@@ -105,12 +106,12 @@ class HFSftArgs(HFModelArgs, TrainingArguments):
         assert self.train_dataset_path is not None, "train_dataset_path must be set."
         if self.train_dataset_path and not self.do_train:
             self.do_train = True
-            print(
+            logger.warn(
                 f"a train_dataset_path is set but do_train flag is not set, automatically set do_train to True"
             )
         if self.eval_dataset_path and not self.do_eval:
             self.do_eval = True
-            print(
+            logger.warn(
                 f"a eval_dataset_path is set but do_eval flag is not set, automatically set do_eval to True"
             )
 
