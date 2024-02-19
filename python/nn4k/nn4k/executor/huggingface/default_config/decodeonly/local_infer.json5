@@ -1,0 +1,7 @@
+
+{
+  // -- base model info
+  "nn_model_path": "/Path/to/model_dir", // local model path
+  "nn_invoker": "nn4k.invoker.base.LLMInvoker", // invoker to use
+  "nn_executor": "nn4k.executor.huggingface.hf_decode_only_executor.HFDecodeOnlyExecutor" // executor to use
+}
